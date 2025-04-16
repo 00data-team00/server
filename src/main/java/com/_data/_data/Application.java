@@ -2,8 +2,10 @@ package com._data._data;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-@SpringBootApplication
+@SpringBootApplication()
+@EnableJpaRepositories(basePackages = "com._data._data.aichat.repository")
 public class Application {
 
 	public static void main(String[] args) {
