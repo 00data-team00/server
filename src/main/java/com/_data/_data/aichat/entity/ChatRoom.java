@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Table(name = "chat_rooms")
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ChatRoom {
