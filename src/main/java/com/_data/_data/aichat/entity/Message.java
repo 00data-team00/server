@@ -22,6 +22,8 @@ public class Message {
     @Column(name = "chat_room_id", nullable = false)
     private Long chatRoomId;
 
+    @Lob
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String text;
 
     private Boolean isUser;

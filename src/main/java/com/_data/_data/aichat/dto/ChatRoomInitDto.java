@@ -7,9 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ChatRoomDto {
+public class ChatRoomInitDto {
 
-    private Long userId;
+    private Long chatRoomId;
 
-    private Long topicId;
+    private String message;
 }
