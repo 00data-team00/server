@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class MessageDto {
+public class MessageReceiveDto {
     private Long chatRoomId;
 
     private String text;

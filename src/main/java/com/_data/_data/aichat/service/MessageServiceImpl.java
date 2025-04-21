@@ -1,5 +1,7 @@
 package com._data._data.aichat.service;
 
+import com._data._data.aichat.dto.MessageReceiveDto;
+import com._data._data.aichat.entity.ChatRoom;
 import com._data._data.aichat.entity.Message;
 import com._data._data.aichat.entity.Topic;
 import com._data._data.aichat.exception.ChatRoomNotFoundException;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -40,14 +43,17 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Value("classpath:templates/chat-start-prompt.st")
-    private Resource promptResource;
+    private Resource chatStartPromptResource;
+
+    @Value("classpath:templates/chat-continue-prompt.st")
+    private Resource chatContinuePromptResource;
 
     @Override
-    public Message receiveMessage(Long chatRoomId, String text) {
+    public Message receiveMessage(MessageReceiveDto messageReceiveDto) {
         Message message = Message.builder()
-                .chatRoomId(chatRoomId)
-                .text(text)
-                .isUser(true)
+                .chatRoomId(messageReceiveDto.getChatRoomId())
+                .text(messageReceiveDto.getText())
+                .isUser(messageReceiveDto.getIsUser())
                 .build();
 
         return messageRepository.save(message);
@@ -57,16 +63,45 @@ public class MessageServiceImpl implements MessageService {
     public Message generateBeginningMessage(Long topicId, Long chatRoomId) {
         Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new TopicNotFoundException(topicId));
 
-        PromptTemplate promptTemplate = new PromptTemplate(promptResource);
+        PromptTemplate promptTemplate = new PromptTemplate(chatStartPromptResource);
 
         Map<String, Object> params = Map.of(
                 "situation", topic.getDescription(),
                 "role", topic.getAiRole()
         );
 
+        return getMessage(chatRoomId, promptTemplate, params);
+    }
+
+    @Override
+    public Message generateAiMessage(Long chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new ChatRoomNotFoundException(chatRoomId));
+        Topic topic = topicRepository.findById(chatRoom.getTopicId()).orElseThrow(() -> new TopicNotFoundException(chatRoomId));
+
+        List<Message> recentMessages = messageRepository.findRecent10ByChatRoomIdInChronologicalOrder(chatRoomId);
+        String chatHistory = recentMessages.stream()
+                .map(m -> (m.getIsUser() ? "User: " : "Assistant: ") + m.getText())
+                .collect(Collectors.joining("\n"));
+
+        PromptTemplate promptTemplate = new PromptTemplate(chatContinuePromptResource);
+
+        Map<String, Object> params = Map.of(
+                "situation", topic.getDescription(),
+                "role", topic.getAiRole(),
+                "history", chatHistory
+        );
+
+        return getMessage(chatRoomId, promptTemplate, params);
+    }
+
+    private Message getMessage(Long chatRoomId, PromptTemplate promptTemplate, Map<String, Object> params) {
         String prompt = promptTemplate.render(params);
 
-        String response = chatClient.prompt().user(prompt).call().content();
+        String response = chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content()
+                .replaceAll("^\"|\"$", "");
 
         log.info("response: {}", response);
 
@@ -77,13 +112,6 @@ public class MessageServiceImpl implements MessageService {
                 .build();
 
         return messageRepository.save(message);
-    }
-
-    @Override
-    public Message generateAiMessage(Long chatRoomId) {
-        List<Message> messages = getAllMessages(chatRoomId);
-
-        return null;
     }
 
     @Override

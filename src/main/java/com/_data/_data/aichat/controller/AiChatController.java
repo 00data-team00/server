@@ -1,7 +1,6 @@
 package com._data._data.aichat.controller;
 
-import com._data._data.aichat.dto.ChatRoomDto;
-import com._data._data.aichat.dto.ChatRoomInitDto;
+import com._data._data.aichat.dto.*;
 import com._data._data.aichat.entity.ChatRoom;
 import com._data._data.aichat.entity.Message;
 import com._data._data.aichat.entity.Topic;
@@ -42,4 +41,29 @@ public class AiChatController {
         return initInfo;
     }
 
+    @PostMapping("/receive")
+    public MessageResponseDto receiveText(@RequestBody MessageReceiveDto messageReceiveDto) {
+        Message receivedMessage = messageService.receiveMessage(messageReceiveDto);
+
+        MessageResponseDto messageResponseDto = new MessageResponseDto();
+        messageResponseDto.setMessageId(receivedMessage.getId());
+        messageResponseDto.setText(receivedMessage.getText());
+        messageResponseDto.setIsUser(receivedMessage.getIsUser());
+        messageResponseDto.setStoredAt(receivedMessage.getStoredAt());
+
+        return messageResponseDto;
+    }
+
+    @PostMapping("/reply")
+    public MessageResponseDto replyText(@RequestBody ReplyRequestDto replyRequestDto) {
+        Message generatedMessage = messageService.generateAiMessage(replyRequestDto.getChatRoomId());
+
+        MessageResponseDto messageResponseDto = new MessageResponseDto();
+        messageResponseDto.setMessageId(generatedMessage.getId());
+        messageResponseDto.setText(generatedMessage.getText());
+        messageResponseDto.setIsUser(generatedMessage.getIsUser());
+        messageResponseDto.setStoredAt(generatedMessage.getStoredAt());
+
+        return messageResponseDto;
+    }
 }
