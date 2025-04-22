@@ -3,9 +3,11 @@ package com._data._data.auth.controller;
 import com._data._data.auth.dto.MailAuthRequest;
 import com._data._data.auth.dto.MailSendRequest;
 import com._data._data.common.dto.ApiResponse;
+import com._data._data.user.exception.EmailAlreadyRegisteredException;
 import com._data._data.user.service.UserService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -39,5 +41,11 @@ public class MailController {
             isSuccess ? "이메일 인증에 성공하였습니다."
                 : "이메일 인증에 실패하였습니다."
         );
+    }
+
+    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiResponse handleAlreadyRegistered(EmailAlreadyRegisteredException ex) {
+        return new ApiResponse(false, ex.getMessage());
     }
 }
