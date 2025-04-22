@@ -32,7 +32,11 @@ public class UserService {
 
     public boolean validationAuthcode(String email, String authCode) {
         Auth auth = authRepository.findByEmail(email);
-        if(auth != null && auth.getAuthCode().equals(authCode)){
+        if (auth == null || auth.isExpired()) {
+            if (auth != null) authRepository.delete(auth);
+            return false;
+        }
+        if (auth.getAuthCode().equals(authCode)) {
             authRepository.delete(auth);
             return true;
         }
