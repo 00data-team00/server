@@ -15,7 +15,7 @@ public class MailController {
 
     private final UserService userService;
 
-    @PostMapping("/send-auth-code")
+    @PostMapping("/send")
     public ApiResponse sendAuthCode(
         @RequestBody MailSendRequest request
     ) throws MessagingException {
@@ -26,7 +26,7 @@ public class MailController {
         );
     }
 
-    @PostMapping("/auth")
+    @PostMapping("/verify")
     public ApiResponse validateAuthCode(
         @RequestBody MailAuthRequest request
     ) {
