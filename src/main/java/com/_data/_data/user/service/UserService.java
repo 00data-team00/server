@@ -3,6 +3,7 @@ package com._data._data.user.service;
 import com._data._data.auth.entity.Auth;
 import com._data._data.auth.repository.AuthRepository;
 import com._data._data.auth.service.MailService;
+import com._data._data.user.exception.EmailAlreadyRegisteredException;
 import com._data._data.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
@@ -18,6 +19,10 @@ public class UserService {
 
     @Transactional
     public boolean sendAuthcode(String email) throws MessagingException {
+        if (userRepository.existsByEmail(email)) {
+            throw new EmailAlreadyRegisteredException(email);
+        }
+
         String authCode = mailService.sendSimpleMessage(email);
         if(authCode != null){
             Auth auth = authRepository.findByEmail(email);
