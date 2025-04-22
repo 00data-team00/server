@@ -3,11 +3,14 @@ package com._data._data.user.service;
 import com._data._data.auth.entity.Auth;
 import com._data._data.auth.repository.AuthRepository;
 import com._data._data.auth.service.MailService;
+import com._data._data.user.dto.SigninRequest;
+import com._data._data.user.entity.Users;
 import com._data._data.user.exception.EmailAlreadyRegisteredException;
 import com._data._data.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -16,6 +19,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final MailService mailService;
     private final AuthRepository authRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Transactional
     public boolean sendAuthcode(String email) throws MessagingException {
@@ -46,5 +50,24 @@ public class UserService {
             return true;
         }
         return false;
+    }
+
+    @Transactional
+    public Users register(SigninRequest req) {
+        if (userRepository.existsByEmail(req.email())) {
+            throw new EmailAlreadyRegisteredException(req.email());
+        }
+
+        String hashed = passwordEncoder.encode(req.password());
+
+        Users user = Users.builder()
+            .email(req.email())
+            .name(req.name())
+            .nations(req.nations())
+            .password(hashed)
+            .translationLang("ko")
+            .build();
+
+        return userRepository.save(user);
     }
 }
