@@ -72,7 +72,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
         log.info("JwtAuthFilter.doFilterInternal - Finished processing. Passing to next filter");
         filterChain.doFilter(request, response);
-        filterChain.doFilter(request, response); // 다음 필터로 넘기기
     }
 
 
