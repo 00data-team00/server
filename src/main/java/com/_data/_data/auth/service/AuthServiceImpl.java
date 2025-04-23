@@ -2,6 +2,8 @@ package com._data._data.auth.service;
 
 import com._data._data.auth.dto.LoginRequest;
 import com._data._data.auth.dto.LoginResponse;
+import com._data._data.auth.exception.EmailNotFoundException;
+import com._data._data.auth.exception.InvalidPasswordException;
 import com._data._data.auth.jwt.JwtTokenProvider;
 import com._data._data.user.entity.Users;
 import com._data._data.user.repository.UserRepository;
@@ -24,11 +26,11 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse login(LoginRequest dto) {
         Users user = userRepository.findByEmail(dto.email());
         if (user == null) {
-            throw new UsernameNotFoundException("등록되지 않은 이메일입니다.");
+            throw new EmailNotFoundException(dto.email());
         }
 
         if (!passwordEncoder.matches(dto.password(), user.getPassword())) {
-            throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
+            throw new InvalidPasswordException();
         }
 
         return jwtTokenProvider.generateTokenDto(
