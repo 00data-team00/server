@@ -1,6 +1,5 @@
 package com._data._data.auth.controller;
 
-import com._data._data.auth.dto.LoginRequest;
 import com._data._data.auth.dto.MailAuthRequest;
 import com._data._data.auth.dto.MailSendRequest;
 import com._data._data.common.dto.ApiResponse;
