@@ -5,9 +5,11 @@ import com._data._data.community.dto.ProfileDto;
 import com._data._data.community.entity.Like;
 import com._data._data.community.entity.Comment;
 import com._data._data.community.entity.Follow;
+import com._data._data.community.repository.FollowRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.transaction.annotation.Transactional;
+import java.io.IOException;
 import java.util.List;
-import com._data._data.community.dto.PostCreateRequest;
 import com._data._data.community.dto.PostDto;
 import com._data._data.community.entity.Post;
 import com._data._data.community.repository.CommentRepository;
@@ -18,6 +20,7 @@ import com._data._data.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -26,19 +29,48 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
     private final UserRepository userRepository;
+    private final FileService fileService;
+    private final FollowRepository followRepository;
 
-    public PostDto createPost(Users user, PostCreateRequest req) {
+    @Transactional
+    public PostDto createPost(Users user, String content, MultipartFile image) throws IOException {
         Post post = Post.builder()
             .author(user)
-            .content(req.content())
-            .imageUrl(req.imageUrl())
+            .content(content)
             .createdAt(LocalDateTime.now())
             .likeCount(0L)
             .commentCount(0L)
             .build();
         Post saved = postRepository.save(post);
+
+        if (image != null && !image.isEmpty()) {
+            String imageUrl = fileService.store(image, "post", user.getId(), saved.getId());
+            saved.setImageUrl("/uploads" + imageUrl);
+            postRepository.save(saved);
+        }
         return PostDto.from(saved);
     }
+
+    @Transactional
+    public void deletePost(Users user, Long postId) {
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new EntityNotFoundException("포스트를 찾을 수 없습니다."));
+
+        if (!post.getAuthor().equals(user)) {
+            throw new IllegalStateException("본인이 작성한 포스트만 삭제할 수 있습니다.");
+        }
+
+
+        commentRepository.deleteByPost(post);
+        likeRepository.deleteByPost(post);
+
+        // 이미지가 있으면 파일 삭제 (선택 사항)
+        if (post.getImageUrl() != null) {
+            fileService.delete(post.getImageUrl().replace("/uploads", ""));
+        }
+        postRepository.delete(post);
+    }
+
 
     public List<PostDto> getPostsByUser(Users user) {
         return postRepository.findByAuthor(user).stream()
@@ -93,9 +125,14 @@ public class PostService {
         postRepository.save(post);
     }
 
+    @Transactional(readOnly = true)
     public List<PostDto> getFollowingTimeline(Users user) {
-        List<Users> followees = user.getFollowing().stream()
-            .map(Follow::getFollowee).toList();
+        List<Users> followees = followRepository.findByFollower(user).stream()
+            .map(Follow::getFollowee)
+            .toList();
+        if (followees.isEmpty()) {
+            return List.of();
+        }
         return postRepository.findByAuthorInOrderByCreatedAtDesc(followees)
             .stream().map(PostDto::from).toList();
     }
