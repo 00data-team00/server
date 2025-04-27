@@ -27,15 +27,18 @@ public class FollowService {
         }
         Users target = usersRepository.findById(targetUserId)
             .orElseThrow(() -> new EntityNotFoundException("사용자 없음"));
+
         boolean exists = followRepository.existsByFollowerAndFollowee(currentUser, target);
-        if (!exists) {
-            Follow f = Follow.builder()
-                .follower(currentUser)
-                .followee(target)
-                .createdAt(LocalDateTime.now())
-                .build();
-            followRepository.save(f);
+        if (exists) {
+            throw new IllegalStateException("이미 팔로우 중인 유저입니다.");
         }
+
+        Follow f = Follow.builder()
+            .follower(currentUser)
+            .followee(target)
+            .createdAt(LocalDateTime.now())
+            .build();
+        followRepository.save(f);
     }
 
     @Transactional

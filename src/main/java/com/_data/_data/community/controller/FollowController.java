@@ -27,18 +27,29 @@ public class FollowController {
         @AuthenticationPrincipal CustomUserDetails principal,
         @PathVariable Long userId
     ) {
-        followService.follow(principal.getUser(), userId);
-        return new ApiResponse(true, "팔로우 성공");
+        try {
+            followService.follow(principal.getUser(), userId);
+            return new ApiResponse(true, "팔로우 성공");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return new ApiResponse(false, e.getMessage());
+        } catch (Exception e) {
+            return new ApiResponse(false, "팔로우 실패: 알 수 없는 오류");
+        }
     }
 
-    // 🔹 유저 언팔로우
     @DeleteMapping("/follow/{userId}")
     public ApiResponse unfollowUser(
         @AuthenticationPrincipal CustomUserDetails principal,
         @PathVariable Long userId
     ) {
-        followService.unfollow(principal.getUser(), userId);
-        return new ApiResponse(true, "언팔로우 성공");
+        try {
+            followService.unfollow(principal.getUser(), userId);
+            return new ApiResponse(true, "언팔로우 성공");
+        } catch (IllegalArgumentException e) {
+            return new ApiResponse(false, e.getMessage());
+        } catch (Exception e) {
+            return new ApiResponse(false, "언팔로우 실패: 알 수 없는 오류");
+        }
     }
 
     // 🔹 내가 팔로잉 중인 유저 목록
