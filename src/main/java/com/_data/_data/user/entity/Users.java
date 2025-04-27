@@ -48,7 +48,7 @@ public class Users {
     @Column(nullable = false)
     private String password;
 
-    private String profileImage;
+    private String profileImage = "/uploads/profile/blank.jpg";
 
     // --- 연관관계 ---
     @OneToMany(mappedBy = "author")
