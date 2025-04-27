@@ -6,12 +6,12 @@
 -- =========================
 INSERT INTO users (email, name, nations, translation_lang, password, profile_image)
 VALUES
-('user1@example.com',  'User1', 1, 'en', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
-('user2@example.com',  'User2', 1, 'en', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
-('user3@example.com',  'User3', 1, 'en', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
-('user4@example.com',  'User4', 1, 'en', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
-('user5@example.com',  'User5', 1, 'en', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
-('user6@example.com',  'User6', 1, 'en', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
+('user1@example.com',  'User1', 1, 'en-US', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
+('user2@example.com',  'User2', 1, 'en-US', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
+('user3@example.com',  'User3', 1, 'en-US', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
+('user4@example.com',  'User4', 1, 'en-US', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
+('user5@example.com',  'User5', 1, 'en-US', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
+('user6@example.com',  'User6', 1, 'en-US', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
 ('user7@example.com',  'User7', 2, 'jp', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
 ('user8@example.com',  'User8', 2, 'jp', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
 ('user9@example.com',  'User9', 2, 'jp', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),

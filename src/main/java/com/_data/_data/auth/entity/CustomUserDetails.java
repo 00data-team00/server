@@ -1,12 +1,13 @@
 package com._data._data.auth.entity;
 
 import com._data._data.user.entity.Users;
-import java.util.Collection;
-import java.util.Collections;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.Collections;
 
 @Getter
 @RequiredArgsConstructor
@@ -26,7 +27,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getId().toString();
+        return user.getEmail();
     }
 
     @Override
