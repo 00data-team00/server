@@ -1,6 +1,7 @@
 package com._data._data.auth.jwt;
 
 import com._data._data.auth.config.SecurityConstant;
+import com._data._data.auth.entity.CustomUserDetails;
 import com._data._data.auth.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -64,9 +65,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     //UserDetsils, Password, Role -> 접근권한 인증 Token 생성
                     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                    //현재 Request의 Security Context에 접근권한 설정
                     SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+
+                    if (userDetails instanceof CustomUserDetails cud) {
+                        log.info("Authenticated User - Email: {}, Name: {}",
+                            cud.getUser().getEmail(),
+                            cud.getUser().getName()
+                        );
+                    }
                 }
             }
         }
