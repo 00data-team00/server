@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface LikeRepository extends JpaRepository<Like, Long> {
     boolean existsByPostAndUser(Post post, Users user);
     Optional<Like> findByPostAndUser(Post post, Users user);
+    void deleteByPost(Post post);
 }
