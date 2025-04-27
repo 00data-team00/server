@@ -20,6 +20,7 @@ public class UserService {
     private final MailService mailService;
     private final AuthRepository authRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private static final String DEFAULT_PROFILE_IMAGE = "/uploads/profile/blank.jpg";
 
     @Transactional
     public boolean sendAuthcode(String email) throws MessagingException {
@@ -66,6 +67,7 @@ public class UserService {
             .nations(req.nations())
             .password(hashed)
             .translationLang("ko")
+            .profileImage(DEFAULT_PROFILE_IMAGE)
             .build();
 
         return userRepository.save(user);
