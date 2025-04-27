@@ -32,6 +32,9 @@ jobs:
         run: |
           echo "${{ secrets.APPLICATION_SECRET_YML }}" > ./src/main/resources/application-secret.yml
 
+      - name: Gradle 실행 권한 추가
+        run: chmod +x ./gradlew
+
       - name: Gradle 빌드
         run: ./gradlew clean build -x test
 
