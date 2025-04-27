@@ -10,14 +10,16 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class MessageResponseDto {
+public class ChatRoomResponseDto {
 
-    private Long messageId;
+    private Long chatRoomId;
 
-    private String text;
+    private String title;
 
-    private Boolean isUser;
+    private String Description;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime storedAt;
+    private LocalDateTime createdAt;
+
+    private Boolean isFinished;
 }
