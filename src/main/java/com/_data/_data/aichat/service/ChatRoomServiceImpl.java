@@ -1,6 +1,5 @@
 package com._data._data.aichat.service;
 
-import com._data._data.aichat.dto.ChatRoomDto;
 import com._data._data.aichat.entity.ChatRoom;
 import com._data._data.aichat.entity.Topic;
 import com._data._data.aichat.exception.TopicNotFoundException;
@@ -25,10 +24,12 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final UserRepository userRepository;
 
     @Override
-    public ChatRoom creatChatRoom(ChatRoomDto chatRoomDto) {
+    public ChatRoom creatChatRoom(Long topicId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Users user = userRepository.findByEmail(userDetails.getUsername());
 
-        Long topicId = chatRoomDto.getTopicId();
-        Long userId = chatRoomDto.getUserId();
+        Long userId = user.getId();
 
         Topic topic = topicRepository.findById(topicId)
                 .orElseThrow(() -> new TopicNotFoundException(topicId));

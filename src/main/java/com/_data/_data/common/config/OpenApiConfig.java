@@ -11,8 +11,8 @@ public class OpenApiConfig {
     public OpenAPI instagramInsightOpenAPI() {
         return new OpenAPI()
             .info(new Info()
-                .title("Instagram Insight API")
+                .title("00data API")
                 .version("v1")
-                .description("인스타그램 인사이트 조회 및 게시 API 문서"));
+                .description("00data API 문서"));
     }
 }

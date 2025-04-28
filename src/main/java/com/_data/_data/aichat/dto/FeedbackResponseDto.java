@@ -7,9 +7,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ChatRoomDto {
+public class FeedbackResponseDto {
 
-    private Long userId;
+    private Long feedbackId;
 
-    private Long topicId;
+    private String lang;
+
+    private String text;
 }

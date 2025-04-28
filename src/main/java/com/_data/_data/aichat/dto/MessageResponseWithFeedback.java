@@ -4,11 +4,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 @NoArgsConstructor
-public class MessageResponseWrapper {
-    private List<MessageResponseWithFeedback> messages;
+public class MessageResponseWithFeedback extends MessageResponseDto {
+
+    private String feedbackLang;
+
+    private String feedbackContent;
 }

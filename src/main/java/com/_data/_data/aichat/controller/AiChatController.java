@@ -9,17 +9,19 @@ import com._data._data.aichat.service.ChatRoomService;
 import com._data._data.aichat.service.MessageService;
 import com._data._data.aichat.service.TopicService;
 import com._data._data.aichat.service.TranslationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
+@Tag(name = "AiChat", description = "AI 회화 관련 API")
 public class AiChatController {
 
     private final TopicService topicService;
@@ -27,14 +29,22 @@ public class AiChatController {
     private final MessageService messageService;
     private final TranslationService translationService;
 
+    @Operation(
+            summary = "대화 주제 목록",
+            description = "AI 회화를 위한 주제 목록을 반환합니다."
+    )
     @GetMapping("/topics")
     public List<Topic> getTopics() {
         return topicService.getAllTopics();
     }
 
+    @Operation(
+            summary = "채팅 시작",
+            description = "유저가 선택한 주제로 채팅방을 생성하고 채팅방 ID와 함께 대화 시작 메세지를 반환합니다."
+    )
     @PostMapping("/me/start")
-    public ChatRoomInitDto startChat(@RequestBody ChatRoomDto chatRoomDto) throws Exception {
-        ChatRoom chatRoom = chatRoomService.creatChatRoom(chatRoomDto);
+    public ChatRoomInitDto startChat(@RequestParam Long topicId) throws Exception {
+        ChatRoom chatRoom = chatRoomService.creatChatRoom(topicId);
 
         Message initMessage = messageService.generateBeginningMessage(chatRoom.getTopicId(), chatRoom.getId());
         translationService.getTranslation(initMessage.getId());
@@ -46,18 +56,26 @@ public class AiChatController {
         return initInfo;
     }
 
+    @Operation(
+            summary = "유저 메세지 저장 및 AI 응답",
+            description = "stt로 생성된 유저 메세지를 저장하고 저장된 유저 메세지의 정보와 함께 AI 응답 메세지를 반환합니다."
+    )
     @PostMapping("/me/receive")
-    public MessageResponseDto receiveText(@RequestBody MessageReceiveDto messageReceiveDto) throws Exception {
+    public MessageReceiveAndResponseWrapper receiveText(@RequestBody MessageReceiveDto messageReceiveDto) throws Exception {
         Message receivedMessage = messageService.receiveMessage(messageReceiveDto);
-        return getMessageResponseDto(receivedMessage);
+        Message generatedMessage = messageService.generateAiMessage(messageReceiveDto.getChatRoomId());
+
+        MessageReceiveAndResponseWrapper messageReceiveAndResponseWrapper = new MessageReceiveAndResponseWrapper();
+        messageReceiveAndResponseWrapper.setUserMessage(getMessageResponseDto(receivedMessage));
+        messageReceiveAndResponseWrapper.setAiMessage(getMessageResponseDto(generatedMessage));
+
+        return messageReceiveAndResponseWrapper;
     }
 
-    @PostMapping("/me/reply")
-    public MessageResponseDto replyText(@RequestBody ReplyRequestDto replyRequestDto) throws Exception {
-        Message generatedMessage = messageService.generateAiMessage(replyRequestDto.getChatRoomId());
-        return getMessageResponseDto(generatedMessage);
-    }
-
+    @Operation(
+            summary = "메세지 번역",
+            description = "해당 메세지를 번역한 결과를 반환합니다."
+    )
     @PostMapping("/me/translate")
     public TranslationResponseDto translateText(@RequestParam Long messageId) throws Exception {
         Translation translation = translationService.getTranslation(messageId);
@@ -66,25 +84,6 @@ public class AiChatController {
         translationResponseDto.setLang(translation.getLang());
         translationResponseDto.setText(translation.getTranslatedText());
         return translationResponseDto;
-    }
-
-    @GetMapping("/messages")
-    public MessageResponseWrapper getAllMessagesInChatRoom(@RequestParam Long chatRoomId) {
-        List<Message> messages = messageService.getAllMessages(chatRoomId);
-
-        MessageResponseWrapper messageResponseWrapper = new MessageResponseWrapper();
-        messageResponseWrapper.setMessages(messages.stream()
-                .map(message -> {
-                    MessageResponseDto dto = new MessageResponseDto();
-                    dto.setMessageId(message.getId());
-                    dto.setText(message.getText());
-                    dto.setIsUser(message.getIsUser());
-                    dto.setStoredAt(message.getStoredAt());
-                    return dto;
-                })
-                .collect(Collectors.toList()));
-
-        return messageResponseWrapper;
     }
 
     private MessageResponseDto getMessageResponseDto(Message message) throws Exception {
