@@ -1,5 +1,7 @@
 package com._data._data.community.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com._data._data.auth.entity.CustomUserDetails;
 import com._data._data.common.dto.ApiResponse;
 import com._data._data.community.dto.CommentDto;
@@ -20,14 +22,17 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+@Tag(name = "Post", description = "게시글 작성, 조회, 댓글, 좋아요, 타임라인 API")
 @RestController
 @RequestMapping("/api/me/posts")
 @RequiredArgsConstructor
 public class PostController {
     private final PostService postService;
 
-    // === 포스트 작성 ===
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+        summary = "포스트 작성",
+        description = "multipart/form-data로 포스트를 작성합니다."
+    )    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public PostDto createPost(
         @AuthenticationPrincipal CustomUserDetails principal,
         @RequestPart("content") String content,
@@ -36,7 +41,7 @@ public class PostController {
         return postService.createPost(principal.getUser(), content, image);
     }
 
-    // === 내가 작성한 포스트 조회 ===
+    @Operation(summary = "내가 작성한 포스트 조회", description = "인증된 사용자가 작성한 모든 포스트를 반환합니다.")
     @GetMapping("")
     public List<PostDto> getMyPosts(
         @AuthenticationPrincipal CustomUserDetails principal
@@ -44,7 +49,7 @@ public class PostController {
         return postService.getPostsByUser(principal.getUser());
     }
 
-    // === 포스트에 댓글 작성 ===
+    @Operation(summary = "포스트에 댓글 작성", description = "지정된 포스트에 댓글을 작성합니다.")
     @PostMapping("/{postId}/comments")
     public CommentDto addComment(
         @AuthenticationPrincipal CustomUserDetails principal,
@@ -54,7 +59,7 @@ public class PostController {
         return postService.addComment(principal.getUser(), postId, content);
     }
 
-    // === 포스트 좋아요 누르기 ===
+    @Operation(summary = "포스트 좋아요", description = "지정된 포스트에 좋아요를 합니다.")
     @PostMapping("/{postId}/like")
     public void likePost(
         @AuthenticationPrincipal CustomUserDetails principal,
@@ -63,7 +68,7 @@ public class PostController {
         postService.likePost(principal.getUser(), postId);
     }
 
-    // === 포스트 좋아요 취소 ===
+    @Operation(summary = "포스트 좋아요 취소", description = "지정된 포스트의 좋아요를 취소합니다.")
     @DeleteMapping("/{postId}/like")
     public void unlikePost(
         @AuthenticationPrincipal CustomUserDetails principal,
@@ -72,7 +77,7 @@ public class PostController {
         postService.unlikePost(principal.getUser(), postId);
     }
 
-    // === 타임라인: 팔로잉 유저들의 포스트 ===
+    @Operation(summary = "팔로잉 타임라인 조회", description = "팔로잉 중인 유저들의 포스트를 반환합니다.")
     @GetMapping("/timeline/following")
     public List<PostDto> getFollowingTimeline(
         @AuthenticationPrincipal CustomUserDetails principal
@@ -80,7 +85,7 @@ public class PostController {
         return postService.getFollowingTimeline(principal.getUser());
     }
 
-    // === 타임라인: 같은 국가 유저들의 포스트 ===
+    @Operation(summary = "국가별 타임라인 조회", description = "같은 국가 유저들의 포스트를 반환합니다.")
     @GetMapping("/timeline/nation")
     public List<PostDto> getNationTimeline(
         @AuthenticationPrincipal CustomUserDetails principal
@@ -88,7 +93,7 @@ public class PostController {
         return postService.getNationTimeline(principal.getUser());
     }
 
-    // 포스트 삭제
+    @Operation(summary = "포스트 삭제", description = "지정된 포스트를 삭제합니다.")
     @DeleteMapping("/{postId}")
     public ApiResponse deletePost(
         @AuthenticationPrincipal CustomUserDetails principal,

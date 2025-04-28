@@ -5,6 +5,7 @@ import com._data._data.user.dto.SigninRequest;
 import com._data._data.user.entity.Users;
 import com._data._data.user.exception.EmailAlreadyRegisteredException;
 import com._data._data.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
 
+
+    @Operation(
+        summary     = "회원가입",
+        description = "이메일, 비밀번호 등을 포함한 회원가입 정보를 전달하여 신규 사용자를 등록합니다."
+    )
     @PostMapping("/api/user/register")
     public ApiResponse registerUser(@Valid @RequestBody SigninRequest req) {
         Users created = userService.register(req);
