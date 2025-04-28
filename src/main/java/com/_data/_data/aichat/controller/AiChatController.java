@@ -43,8 +43,8 @@ public class AiChatController {
             description = "유저가 선택한 주제로 채팅방을 생성하고 채팅방 ID와 함께 대화 시작 메세지를 반환합니다."
     )
     @PostMapping("/me/start")
-    public ChatRoomInitDto startChat(@RequestBody ChatRoomDto chatRoomDto) throws Exception {
-        ChatRoom chatRoom = chatRoomService.creatChatRoom(chatRoomDto);
+    public ChatRoomInitDto startChat(@RequestParam Long topicId) throws Exception {
+        ChatRoom chatRoom = chatRoomService.creatChatRoom(topicId);
 
         Message initMessage = messageService.generateBeginningMessage(chatRoom.getTopicId(), chatRoom.getId());
         translationService.getTranslation(initMessage.getId());
