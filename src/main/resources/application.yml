@@ -29,7 +29,7 @@ spring:
       chat:
         completions-path: /chat/completions
         options:
-          model: llama-3.1-sonar-small-128k-online
+          model: llama-3.1-sonar-large-128k-online
           temperature: 0.2
           max-completion-tokens: 100
     model:

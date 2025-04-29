@@ -22,6 +22,7 @@ public class Message {
     @Column(name = "chat_room_id", nullable = false)
     private Long chatRoomId;
 
+    @Lob
     private String text;
 
     private Boolean isUser;

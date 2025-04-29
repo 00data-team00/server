@@ -24,6 +24,7 @@ public class Feedback {
     @Column(name = "feedback_lang", nullable = false)
     private String lang;
 
+    @Lob
     private String feedbackText;
 
     private LocalDateTime feedbackAt;
