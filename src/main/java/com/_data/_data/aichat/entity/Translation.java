@@ -24,6 +24,7 @@ public class Translation {
     @Column(name = "translation_lang", nullable = false)
     private String lang;
 
+    @Lob
     private String translatedText;
 
     private LocalDateTime translatedAt;

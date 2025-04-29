@@ -14,10 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -86,5 +83,20 @@ public class MyPageController {
                 .collect(Collectors.toList()));
 
         return messageResponseWrapper;
+    }
+
+    @Operation(
+            summary = "피드백 생성 테스트",
+            description = "피드백 생성 테스트 용도입니다."
+    )
+    @GetMapping("/test/feedback")
+    public MessageResponseWithFeedback feedbackMessage(@RequestParam Long messageId) {
+        MessageResponseWithFeedback messageResponseWithFeedback = new MessageResponseWithFeedback();
+        messageResponseWithFeedback.setMessageId(messageId);
+        Feedback feedback = feedbackService.getFeedback(messageId);
+        messageResponseWithFeedback.setFeedbackContent(feedback.getFeedbackText());
+        messageResponseWithFeedback.setFeedbackLang(feedback.getLang());
+
+        return messageResponseWithFeedback;
     }
 }

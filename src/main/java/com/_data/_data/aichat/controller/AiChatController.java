@@ -1,10 +1,7 @@
 package com._data._data.aichat.controller;
 
 import com._data._data.aichat.dto.*;
-import com._data._data.aichat.entity.ChatRoom;
-import com._data._data.aichat.entity.Message;
-import com._data._data.aichat.entity.Topic;
-import com._data._data.aichat.entity.Translation;
+import com._data._data.aichat.entity.*;
 import com._data._data.aichat.service.ChatRoomService;
 import com._data._data.aichat.service.MessageService;
 import com._data._data.aichat.service.TopicService;

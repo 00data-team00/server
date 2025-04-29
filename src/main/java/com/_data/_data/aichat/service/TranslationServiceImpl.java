@@ -12,6 +12,7 @@ import com.deepl.api.DeepLClient;
 import com.deepl.api.TextResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,11 +26,13 @@ public class TranslationServiceImpl implements TranslationService {
     private final UserRepository userRepository;
     private final TranslationRepository translationRepository;
 
-    private final String authKey = "96aa7506-ac4d-47e7-aedc-e954b3fbe273:fx";
-    private final DeepLClient client = new DeepLClient(authKey);
+    @Value("${deepl.auth.key}")
+    private String authKey;
 
     @Override
     public Translation translateMessage(Long messageId, String messageText, String targetLang) throws Exception {
+
+        DeepLClient client = new DeepLClient(authKey);
 
         TextResult result = client.translateText(messageText, "ko", targetLang);
 
