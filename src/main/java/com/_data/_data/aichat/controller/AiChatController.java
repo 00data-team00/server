@@ -1,7 +1,9 @@
 package com._data._data.aichat.controller;
 
 import com._data._data.aichat.dto.*;
-import com._data._data.aichat.entity.*;
+import com._data._data.aichat.entity.ChatRoom;
+import com._data._data.aichat.entity.Message;
+import com._data._data.aichat.entity.Translation;
 import com._data._data.aichat.service.ChatRoomService;
 import com._data._data.aichat.service.MessageService;
 import com._data._data.aichat.service.TopicService;
@@ -11,8 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -31,7 +31,7 @@ public class AiChatController {
             description = "AI 회화를 위한 주제 목록을 반환합니다."
     )
     @GetMapping("/topics")
-    public List<Topic> getTopics() {
+    public TopicListDto getTopics() {
         return topicService.getAllTopics();
     }
 

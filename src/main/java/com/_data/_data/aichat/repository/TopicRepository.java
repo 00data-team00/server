@@ -12,5 +12,5 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
 
     Optional<Topic> findByTitle(String title);
 
-    List<Topic> findByCategory(String title);
+    List<Topic> findByCategory(String category);
 }
