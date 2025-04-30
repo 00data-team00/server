@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @Tag(name = "Post", description = "게시글 작성, 조회, 댓글, 좋아요, 타임라인 API")
 @RestController
@@ -40,7 +41,7 @@ public class PostController {
     public PostListDto getMyPosts(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        return new PostListDto(postService.getPostsByUser(principal.getUser()));
+        return toPostListDto(postService.getPostsByUser(principal.getUser()));
     }
 
     @Operation(summary = "포스트에 댓글 작성", description = "지정된 포스트에 댓글을 작성합니다.")
@@ -76,7 +77,7 @@ public class PostController {
     public PostListDto getFollowingTimeline(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        return new PostListDto(postService.getFollowingTimeline(principal.getUser()));
+        return toPostListDto(postService.getFollowingTimeline(principal.getUser()));
     }
 
     @Operation(summary = "국가별 타임라인 조회", description = "같은 국가 유저들의 포스트를 반환합니다.")
@@ -84,7 +85,7 @@ public class PostController {
     public PostListDto getNationTimeline(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        return new PostListDto(postService.getNationTimeline(principal.getUser()));
+        return toPostListDto(postService.getNationTimeline(principal.getUser()));
     }
 
     @Operation(summary = "포스트 삭제", description = "지정된 포스트를 삭제합니다.")
@@ -97,4 +98,9 @@ public class PostController {
         return new ApiResponse(true, "포스트 삭제 성공");
     }
 
+    private PostListDto toPostListDto(List<PostDto> posts) {
+        PostListDto postListDto = new PostListDto();
+        postListDto.setPosts(posts);
+        return postListDto;
+    }
 }

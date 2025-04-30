@@ -24,7 +24,9 @@ public class EduProgramController {
     )
     @GetMapping("/closing-soon")
     public EduProgramListDto getClosingSoonPrograms() {
-        return new EduProgramListDto(eduProgramService.findClosingSoonPrograms());
+        EduProgramListDto eduProgramListDto = new EduProgramListDto();
+        eduProgramListDto.setEduPrograms(eduProgramService.findClosingSoonPrograms());
+        return eduProgramListDto;
     }
 
     @Operation(
