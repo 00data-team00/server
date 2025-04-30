@@ -1,26 +1,20 @@
 package com._data._data.community.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import com._data._data.auth.entity.CustomUserDetails;
 import com._data._data.common.dto.ApiResponse;
 import com._data._data.community.dto.CommentDto;
 import com._data._data.community.dto.PostDto;
+import com._data._data.community.dto.PostListDto;
 import com._data._data.community.service.PostService;
-import java.io.IOException;
-import java.util.List;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Tag(name = "Post", description = "게시글 작성, 조회, 댓글, 좋아요, 타임라인 API")
 @RestController
@@ -43,10 +37,10 @@ public class PostController {
 
     @Operation(summary = "내가 작성한 포스트 조회", description = "인증된 사용자가 작성한 모든 포스트를 반환합니다.")
     @GetMapping("")
-    public List<PostDto> getMyPosts(
+    public PostListDto getMyPosts(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        return postService.getPostsByUser(principal.getUser());
+        return new PostListDto(postService.getPostsByUser(principal.getUser()));
     }
 
     @Operation(summary = "포스트에 댓글 작성", description = "지정된 포스트에 댓글을 작성합니다.")
@@ -79,18 +73,18 @@ public class PostController {
 
     @Operation(summary = "팔로잉 타임라인 조회", description = "팔로잉 중인 유저들의 포스트를 반환합니다.")
     @GetMapping("/timeline/following")
-    public List<PostDto> getFollowingTimeline(
+    public PostListDto getFollowingTimeline(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        return postService.getFollowingTimeline(principal.getUser());
+        return new PostListDto(postService.getFollowingTimeline(principal.getUser()));
     }
 
     @Operation(summary = "국가별 타임라인 조회", description = "같은 국가 유저들의 포스트를 반환합니다.")
     @GetMapping("/timeline/nation")
-    public List<PostDto> getNationTimeline(
+    public PostListDto getNationTimeline(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        return postService.getNationTimeline(principal.getUser());
+        return new PostListDto(postService.getNationTimeline(principal.getUser()));
     }
 
     @Operation(summary = "포스트 삭제", description = "지정된 포스트를 삭제합니다.")

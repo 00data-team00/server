@@ -1,20 +1,15 @@
 package com._data._data.eduinfo.controller;
 
+import com._data._data.eduinfo.dto.EduProgramListDto;
 import com._data._data.eduinfo.dto.EduProgramSimpleDto;
 import com._data._data.eduinfo.entity.EduProgram;
 import com._data._data.eduinfo.service.EduProgramService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import java.util.List;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "EduInfo", description = "교육 프로그램 조회 및 동기화 API")
 @RestController
@@ -28,8 +23,8 @@ public class EduProgramController {
         description = "신청 마감일이 7일 내로 남은 교육 프로그램의 간략 정보를 반환합니다."
     )
     @GetMapping("/closing-soon")
-    public List<EduProgramSimpleDto> getClosingSoonPrograms() {
-        return eduProgramService.findClosingSoonPrograms();
+    public EduProgramListDto getClosingSoonPrograms() {
+        return new EduProgramListDto(eduProgramService.findClosingSoonPrograms());
     }
 
     @Operation(
