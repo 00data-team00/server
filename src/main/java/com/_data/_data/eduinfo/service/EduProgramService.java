@@ -128,14 +128,18 @@ public class EduProgramService {
     }
 
     private EduProgramSimpleDto toSimpleDto(EduProgram ep) {
+        String tuit = ep.getTuitEtc();
+        boolean isFree = (tuit == null || tuit.isBlank());
         return new EduProgramSimpleDto(
             ep.getId(),
             ep.getTitleNm(),
             ep.getAppQual(),
-            ep.getTuitEtc(),
-            ep.getAppEndDate()
+            tuit,
+            ep.getAppEndDate(),
+            isFree        // ← 여기
         );
     }
+
 
     private LocalDate parseDate(JsonNode item, String key) {
         String raw = item.path(key).asText();
