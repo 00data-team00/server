@@ -64,7 +64,7 @@ jobs:
 #          echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
 
       - name: 배포 스크립트 실행
-        uses: appleboy/ssh-action@v0.8.0
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.EC2_HOST }}
           user: ${{ secrets.EC2_USER }}
