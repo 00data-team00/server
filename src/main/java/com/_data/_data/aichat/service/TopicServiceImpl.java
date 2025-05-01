@@ -19,6 +19,7 @@ public class TopicServiceImpl implements TopicService {
 
     private static TopicDto getTopicDto(Topic topic) {
         TopicDto topicDto = new TopicDto();
+        topicDto.setId(topic.getId());
         topicDto.setCategory(topic.getCategory());
         topicDto.setTitle(topic.getTitle());
         topicDto.setDescription(topic.getDescription());
