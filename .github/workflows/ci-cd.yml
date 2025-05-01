@@ -3,8 +3,10 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - "main"
-
+      - main
+  pull_request:
+    branches:
+      - main
 jobs:
   build-and-push:
     name: Build and Push Docker Image
@@ -67,7 +69,7 @@ jobs:
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.EC2_HOST }}
-          user: ${{ secrets.EC2_USER }}
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             cd /home/ec2-user${{ secrets.EC2_USER }}
