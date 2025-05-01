@@ -9,6 +9,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class TopicDto {
 
+    private Long id;
+
     private String category;
 
     private String title;
