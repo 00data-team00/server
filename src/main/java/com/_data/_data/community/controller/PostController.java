@@ -19,7 +19,7 @@ import java.util.List;
 
 @Tag(name = "Post", description = "게시글 작성, 조회, 댓글, 좋아요, 타임라인 API")
 @RestController
-@RequestMapping("/api/me/posts")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class PostController {
     private final PostService postService;
@@ -27,7 +27,11 @@ public class PostController {
     @Operation(
         summary = "포스트 작성",
         description = "multipart/form-data로 포스트를 작성합니다."
-    )    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    )
+    @PostMapping(
+        value = "/me/posts",
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public PostDto createPost(
         @AuthenticationPrincipal CustomUserDetails principal,
         @RequestPart("content") String content,
@@ -37,7 +41,7 @@ public class PostController {
     }
 
     @Operation(summary = "내가 작성한 포스트 조회", description = "인증된 사용자가 작성한 모든 포스트를 반환합니다.")
-    @GetMapping("")
+    @GetMapping("/me/posts")
     public PostListDto getMyPosts(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
@@ -45,7 +49,7 @@ public class PostController {
     }
 
     @Operation(summary = "포스트에 댓글 작성", description = "지정된 포스트에 댓글을 작성합니다.")
-    @PostMapping("/{postId}/comments")
+    @PostMapping("/me/posts/{postId}/comments")
     public CommentDto addComment(
         @AuthenticationPrincipal CustomUserDetails principal,
         @PathVariable Long postId,
@@ -55,7 +59,7 @@ public class PostController {
     }
 
     @Operation(summary = "포스트 좋아요", description = "지정된 포스트에 좋아요를 합니다.")
-    @PostMapping("/{postId}/like")
+    @PostMapping("/me/posts/{postId}/like")
     public void likePost(
         @AuthenticationPrincipal CustomUserDetails principal,
         @PathVariable Long postId
@@ -64,7 +68,7 @@ public class PostController {
     }
 
     @Operation(summary = "포스트 좋아요 취소", description = "지정된 포스트의 좋아요를 취소합니다.")
-    @DeleteMapping("/{postId}/like")
+    @DeleteMapping("/me/posts/{postId}/like")
     public void unlikePost(
         @AuthenticationPrincipal CustomUserDetails principal,
         @PathVariable Long postId
@@ -73,7 +77,7 @@ public class PostController {
     }
 
     @Operation(summary = "팔로잉 타임라인 조회", description = "팔로잉 중인 유저들의 포스트를 반환합니다.")
-    @GetMapping("/timeline/following")
+    @GetMapping("/me/posts/timeline/following")
     public PostListDto getFollowingTimeline(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
@@ -81,7 +85,7 @@ public class PostController {
     }
 
     @Operation(summary = "국가별 타임라인 조회", description = "같은 국가 유저들의 포스트를 반환합니다.")
-    @GetMapping("/timeline/nation")
+    @GetMapping("/me/posts/timeline/nation")
     public PostListDto getNationTimeline(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
@@ -89,13 +93,22 @@ public class PostController {
     }
 
     @Operation(summary = "포스트 삭제", description = "지정된 포스트를 삭제합니다.")
-    @DeleteMapping("/{postId}")
+    @DeleteMapping("/me/posts/{postId}")
     public ApiResponse deletePost(
         @AuthenticationPrincipal CustomUserDetails principal,
         @PathVariable Long postId
     ) {
         postService.deletePost(principal.getUser(), postId);
         return new ApiResponse(true, "포스트 삭제 성공");
+    }
+
+    @Operation(summary = "전체 포스트 조회", description = "모든 사용자가 작성한 포스트를 최신순으로 반환합니다.")
+    @GetMapping("/posts/timeline")
+    public PostListDto getAllPosts() {
+        List<PostDto> posts = postService.getAllPosts();
+        PostListDto dto = new PostListDto();
+        dto.setPosts(posts);
+        return dto;
     }
 
     private PostListDto toPostListDto(List<PostDto> posts) {

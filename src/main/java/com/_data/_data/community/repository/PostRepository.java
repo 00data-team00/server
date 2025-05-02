@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByAuthor(Users author);
+    List<Post> findAllByOrderByCreatedAtDesc();
     List<Post> findByAuthorInOrderByCreatedAtDesc(List<Users> authors);
     List<Post> findByAuthor_NationsOrderByCreatedAtDesc(Long nations);
 }

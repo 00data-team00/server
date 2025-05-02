@@ -71,6 +71,12 @@ public class PostService {
         postRepository.delete(post);
     }
 
+    public List<PostDto> getAllPosts() {
+        return postRepository.findAllByOrderByCreatedAtDesc()
+            .stream()
+            .map(PostDto::from)
+            .toList();
+    }
 
     public List<PostDto> getPostsByUser(Users user) {
         return postRepository.findByAuthor(user).stream()
