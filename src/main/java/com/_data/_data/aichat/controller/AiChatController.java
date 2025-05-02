@@ -48,6 +48,7 @@ public class AiChatController {
 
         ChatRoomInitDto initInfo = new ChatRoomInitDto();
         initInfo.setChatRoomId(chatRoom.getId());
+        initInfo.setCreatedAt(chatRoom.getCreatedAt());
         initInfo.setMessage(initMessage.getText());
 
         return initInfo;
