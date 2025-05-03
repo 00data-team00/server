@@ -5,6 +5,8 @@ import com._data._data.common.dto.ApiResponse;
 import com._data._data.community.dto.CommentDto;
 import com._data._data.community.dto.PostDto;
 import com._data._data.community.dto.PostListDto;
+import com._data._data.community.dto.PostWithAuthorProfileDto;
+import com._data._data.community.dto.PostWithAuthorProfileListDto;
 import com._data._data.community.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -76,20 +78,33 @@ public class PostController {
         postService.unlikePost(principal.getUser(), postId);
     }
 
-    @Operation(summary = "팔로잉 타임라인 조회", description = "팔로잉 중인 유저들의 포스트를 반환합니다.")
-    @GetMapping("/me/posts/timeline/following")
-    public PostListDto getFollowingTimeline(
+    @Operation(summary = "전체 포스트 조회", description = "모든 사용자가 작성한 포스트를 최신순으로 반환합니다.")
+    @GetMapping("/posts/timeline")
+    public PostWithAuthorProfileListDto getAllPosts(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        return toPostListDto(postService.getFollowingTimeline(principal.getUser()));
+        List<PostWithAuthorProfileDto> posts = postService.getAllTimelineDetailed(
+            principal != null ? principal.getUser() : null
+        );
+        PostWithAuthorProfileListDto dto = new PostWithAuthorProfileListDto();
+        dto.setPosts(posts);
+        return dto;
+    }
+
+    @Operation(summary = "팔로잉 타임라인 조회", description = "팔로잉 중인 유저들의 포스트를 반환합니다.")
+    @GetMapping("/me/posts/timeline/following")
+    public PostWithAuthorProfileListDto  getFollowingTimeline(
+        @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        return toPostWithAuthorProfileListDto(postService.getFollowingTimelineDetailed(principal.getUser()));
     }
 
     @Operation(summary = "국가별 타임라인 조회", description = "같은 국가 유저들의 포스트를 반환합니다.")
     @GetMapping("/me/posts/timeline/nation")
-    public PostListDto getNationTimeline(
+    public PostWithAuthorProfileListDto getNationTimeline(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        return toPostListDto(postService.getNationTimeline(principal.getUser()));
+        return toPostWithAuthorProfileListDto(postService.getNationTimelineDetailed(principal.getUser()));
     }
 
     @Operation(summary = "포스트 삭제", description = "지정된 포스트를 삭제합니다.")
@@ -102,18 +117,15 @@ public class PostController {
         return new ApiResponse(true, "포스트 삭제 성공");
     }
 
-    @Operation(summary = "전체 포스트 조회", description = "모든 사용자가 작성한 포스트를 최신순으로 반환합니다.")
-    @GetMapping("/posts/timeline")
-    public PostListDto getAllPosts() {
-        List<PostDto> posts = postService.getAllPosts();
-        PostListDto dto = new PostListDto();
-        dto.setPosts(posts);
-        return dto;
-    }
-
     private PostListDto toPostListDto(List<PostDto> posts) {
         PostListDto postListDto = new PostListDto();
         postListDto.setPosts(posts);
         return postListDto;
+    }
+
+    private PostWithAuthorProfileListDto toPostWithAuthorProfileListDto(List<PostWithAuthorProfileDto> list) {
+        PostWithAuthorProfileListDto dto = new PostWithAuthorProfileListDto();
+        dto.setPosts(list);
+        return dto;
     }
 }
