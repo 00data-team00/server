@@ -1,6 +1,8 @@
 package com._data._data.community.service;
 
 import com._data._data.community.dto.CommentDto;
+import com._data._data.community.dto.PostAuthorProfileDto;
+import com._data._data.community.dto.PostWithAuthorProfileDto;
 import com._data._data.community.dto.ProfileDto;
 import com._data._data.community.entity.Like;
 import com._data._data.community.entity.Comment;
@@ -71,6 +73,12 @@ public class PostService {
         postRepository.delete(post);
     }
 
+    public List<PostDto> getAllPosts() {
+        return postRepository.findAllByOrderByCreatedAtDesc()
+            .stream()
+            .map(PostDto::from)
+            .toList();
+    }
 
     public List<PostDto> getPostsByUser(Users user) {
         return postRepository.findByAuthor(user).stream()
@@ -165,4 +173,82 @@ public class PostService {
         );
     }
 
+    /**
+     * 팔로잉 타임라인: Post + author profile + isLiked
+     */
+    @Transactional(readOnly = true)
+    public List<PostWithAuthorProfileDto> getFollowingTimelineDetailed(Users currentUser) {
+        List<Users> followees = followRepository.findByFollower(currentUser)
+            .stream().map(f -> f.getFollowee()).toList();
+
+        if (followees.isEmpty()) {
+            return List.of();
+        }
+        // Fetch posts by followees
+        List<Post> posts = postRepository.findByAuthorInOrderByCreatedAtDesc(followees);
+
+        return posts.stream().map(post -> {
+            PostDto dto = PostDto.from(post);
+            boolean isFollowing = true; // by definition, author is followed
+            boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+            var authorProfile = new PostAuthorProfileDto(
+                post.getAuthor().getName(),
+                post.getAuthor().getProfileImage(),
+                (long) post.getAuthor().getPosts().size(),
+                (long) post.getAuthor().getFollowers().size(),
+                (long) post.getAuthor().getFollowing().size(),
+                isFollowing,
+                isLiked
+            );
+            return new PostWithAuthorProfileDto(dto, authorProfile);
+        }).toList();
+    }
+
+    /**
+     * 국가별 타임라인: Post + author profile + isLiked
+     */
+    @Transactional(readOnly = true)
+    public List<PostWithAuthorProfileDto> getNationTimelineDetailed(Users currentUser) {
+        List<Post> posts = postRepository.findByAuthor_NationsOrderByCreatedAtDesc(currentUser.getNations());
+
+        return posts.stream().map(post -> {
+            PostDto dto = PostDto.from(post);
+            boolean isFollowing = followRepository.existsByFollowerAndFollowee(currentUser, post.getAuthor());
+            boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+            var authorProfile = new PostAuthorProfileDto(
+                post.getAuthor().getName(),
+                post.getAuthor().getProfileImage(),
+                (long) post.getAuthor().getPosts().size(),
+                (long) post.getAuthor().getFollowers().size(),
+                (long) post.getAuthor().getFollowing().size(),
+                isFollowing,
+                isLiked
+            );
+            return new PostWithAuthorProfileDto(dto, authorProfile);
+        }).toList();
+    }
+
+    /**
+     * 전체 타임라인: Post + author profile + isLiked
+     */
+    @Transactional(readOnly = true)
+    public List<PostWithAuthorProfileDto> getAllTimelineDetailed(Users currentUser) {
+        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+
+        return posts.stream().map(post -> {
+            PostDto dto = PostDto.from(post);
+            boolean isFollowing = followRepository.existsByFollowerAndFollowee(currentUser, post.getAuthor());
+            boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+            var authorProfile = new PostAuthorProfileDto(
+                post.getAuthor().getName(),
+                post.getAuthor().getProfileImage(),
+                (long) post.getAuthor().getPosts().size(),
+                (long) post.getAuthor().getFollowers().size(),
+                (long) post.getAuthor().getFollowing().size(),
+                isFollowing,
+                isLiked
+            );
+            return new PostWithAuthorProfileDto(dto, authorProfile);
+        }).toList();
+    }
 }
