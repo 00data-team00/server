@@ -57,3 +57,5 @@ app:
 logging:
   level:
     org.springframework.security: DEBUG
+  file:
+    path: /home/ec2-user/logs

@@ -1,6 +1,8 @@
 # Secret properties
 src/main/resources/application-secret.properties
 
+/logs/
+
 HELP.md
 .gradle
 build/
