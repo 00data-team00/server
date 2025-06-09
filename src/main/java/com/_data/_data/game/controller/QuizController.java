@@ -21,6 +21,13 @@ public class QuizController {
         Quiz quiz = quizService.getQuiz(id);
 
         QuizDto quizDto = new QuizDto();
+        quizDto.setCategory(quiz.getCategory());
+        quizDto.setQuizText(quiz.getQuizText());
+        quizDto.setChoices(quiz.getChoices());
+        quizDto.setImage(quiz.getImage());
+        quizDto.setVoice(quiz.getVoice());
+        quizDto.setAnswer(quiz.getAnswer());
+        quizDto.setAnswerScript(quiz.getAnswerScript());
 
         return quizDto;
     }
