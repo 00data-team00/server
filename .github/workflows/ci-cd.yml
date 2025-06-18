@@ -80,6 +80,7 @@ jobs:
                 environment:
                   - SPRING_PROFILES_ACTIVE=prod
                   - DEEPL_AUTH_KEY=${{ secrets.DEEPL_AUTH_KEY }}
+                  - DEEPL.AUTH.KEY=${{ secrets.DEEPL_AUTH_KEY }}
                 restart: unless-stopped
             EOF
             
