@@ -10,6 +10,7 @@ import com._data._data.user.entity.Users;
 import com._data._data.user.repository.UserRepository;
 import com.deepl.api.DeepLClient;
 import com.deepl.api.TextResult;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,20 +30,31 @@ public class TranslationServiceImpl implements TranslationService {
     @Value("${deepl.auth.key}")
     private String authKey;
 
+    private DeepLClient client;
+
+    @PostConstruct
+    public void init() {
+        this.client = new DeepLClient(authKey);
+    }
+
     @Override
     public Translation translateMessage(Long messageId, String messageText, String targetLang) throws Exception {
 
-        DeepLClient client = new DeepLClient(authKey);
+        try {
+            TextResult result = client.translateText(messageText, "ko", targetLang);
+            log.debug("DeepL API 호출 성공 - 번역 결과: {}", result.getText());
 
-        TextResult result = client.translateText(messageText, "ko", targetLang);
+            Translation translation = Translation.builder()
+                    .messageId(messageId)
+                    .lang(targetLang)
+                    .translatedText(result.getText())
+                    .build();
 
-        Translation translation = Translation.builder()
-                .messageId(messageId)
-                .lang(targetLang)
-                .translatedText(result.getText())
-                .build();
-
-        return translationRepository.save(translation);
+            return translationRepository.save(translation);
+        } catch (Exception e) {
+            log.error("DeepL API 호출 실패 - messageId: {}, error: {}", messageId, e.getMessage());
+            throw e;
+        }
     }
 
     @Override
