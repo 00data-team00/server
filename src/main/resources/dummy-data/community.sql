@@ -9,12 +9,12 @@ VALUES
 ('user4@example.com',  'User4', 1, 'en-US', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
 ('user5@example.com',  'User5', 1, 'en-US', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
 ('user6@example.com',  'User6', 1, 'en-US', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
-('user7@example.com',  'User7', 2, 'jp', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
-('user8@example.com',  'User8', 2, 'jp', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
-('user9@example.com',  'User9', 2, 'jp', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
-('user10@example.com', 'User10',2, 'jp', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
-('user11@example.com', 'User11',2, 'jp', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
-('user12@example.com', 'User12',2, 'jp', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg')
+('user7@example.com',  'User7', 2, 'ja', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
+('user8@example.com',  'User8', 2, 'ja', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
+('user9@example.com',  'User9', 2, 'ja', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
+('user10@example.com', 'User10',2, 'ja', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
+('user11@example.com', 'User11',2, 'ja', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg'),
+('user12@example.com', 'User12',2, 'ja', '$2a$10$2GDRotpWIt3/Q93sdroB8eL8yV4XhqpBtwx.nPF0u.4H6DQUvPqsu', '/uploads/profile/blank.jpg')
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   nations = VALUES(nations),

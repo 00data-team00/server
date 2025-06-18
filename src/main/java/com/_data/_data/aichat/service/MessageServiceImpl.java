@@ -53,7 +53,7 @@ public class MessageServiceImpl implements MessageService {
         Message message = Message.builder()
                 .chatRoomId(messageReceiveDto.getChatRoomId())
                 .text(messageReceiveDto.getText())
-                .isUser(messageReceiveDto.getIsUser())
+                .isUser(true)
                 .build();
 
         return messageRepository.save(message);
