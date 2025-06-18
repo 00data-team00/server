@@ -11,6 +11,4 @@ public class MessageReceiveDto {
     private Long chatRoomId;
 
     private String text;
-
-    private Boolean isUser;
 }
