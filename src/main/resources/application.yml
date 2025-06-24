@@ -57,5 +57,8 @@ app:
 logging:
   level:
     org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    com._data._data.eduinfo.service: DEBUG
+    org.springframework.transaction: DEBUG
   file:
     path: /tmp/logs
