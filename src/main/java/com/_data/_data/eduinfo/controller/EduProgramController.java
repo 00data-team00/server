@@ -3,6 +3,7 @@ package com._data._data.eduinfo.controller;
 import com._data._data.eduinfo.dto.EduProgramListDto;
 import com._data._data.eduinfo.dto.EduProgramSimpleDto;
 import com._data._data.eduinfo.entity.EduProgram;
+import com._data._data.eduinfo.service.EduProgramLinkFiller;
 import com._data._data.eduinfo.service.EduProgramService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class EduProgramController {
     private final EduProgramService eduProgramService;
+    private final EduProgramLinkFiller filler;
 
     @Operation(
         summary = "마감 임박 프로그램 조회",
@@ -66,4 +68,9 @@ public class EduProgramController {
         return "배치 동기화 완료";
     }
 
+    @PostMapping("/fill-links")
+    public String fillLinks() {
+        filler.fillMissingLinks();
+        return "링크 크롤링 완료";
+    }
 }
