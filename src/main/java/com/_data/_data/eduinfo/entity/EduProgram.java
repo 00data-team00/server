@@ -88,6 +88,9 @@ public class EduProgram {
     @Column(length = 500)
     private String titleId;   // 인도네시아어
 
+    @Column(length = 1000)
+    private String appLink;
+
     public void updateFrom(EduProgram source) {
         this.langGb = source.langGb;
         this.cont = source.cont;
@@ -111,5 +114,6 @@ public class EduProgram {
         this.titleJa = source.titleJa;
         this.titleVi = source.titleVi;
         this.titleId = source.titleId;
+        this.appLink = source.appLink;
     }
 }
