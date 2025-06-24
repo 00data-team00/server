@@ -17,4 +17,6 @@ public interface EduProgramRepository extends JpaRepository<EduProgram, Long> {
     Page<EduProgram> findByTuitEtcIsNotNullAndTuitEtcNot(String empty, Pageable pageable);
     Page<EduProgram> findByTuitEtcIsNullOrTuitEtc(String empty, Pageable pageable);
     List<EduProgram> findByAppEndYnFalseAndAppEndDateBetweenOrderByAppEndDateAsc(LocalDate start, LocalDate end);
+    List<EduProgram> findByAppLinkIsNull();
+
 }
