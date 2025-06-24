@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-@Profile("local")
+@Profile("!prod")
 public class SeleniumConfigLocal {
     @Bean(destroyMethod = "quit")
     public WebDriver webDriver() {
