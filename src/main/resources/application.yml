@@ -9,6 +9,7 @@ spring:
     hikari:
       connection-init-sql: SET NAMES utf8mb4
 
+
   sql:
     init:
       mode: always
@@ -53,6 +54,9 @@ app:
   upload:
     dir: uploads
     base-url: /uploads
+
+selenium:
+  url: http://selenium:4444
 
 logging:
   level:
