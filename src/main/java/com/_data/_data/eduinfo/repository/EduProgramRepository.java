@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface EduProgramRepository extends JpaRepository<EduProgram, Long> {
-    Optional<EduProgram> findByTitleNmAndLangGb(String titleNm, String langGb);
+    Optional<EduProgram> findByTitleNm(String titleNm);
     List<EduProgram> findByAppEndYnFalseAndAppEndDateBetween(LocalDate start, LocalDate end);
     Page<EduProgram> findByTuitEtcIsNotNullAndTuitEtcNot(String empty, Pageable pageable);
     Page<EduProgram> findByTuitEtcIsNullOrTuitEtc(String empty, Pageable pageable);

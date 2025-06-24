@@ -1,9 +1,12 @@
 package com._data._data.eduinfo.service;
 
 import com._data._data.aichat.service.TranslationService;
+import com._data._data.auth.entity.CustomUserDetails;
 import com._data._data.eduinfo.dto.EduProgramSimpleDto;
 import com._data._data.eduinfo.entity.EduProgram;
 import com._data._data.eduinfo.repository.EduProgramRepository;
+import com._data._data.user.entity.Users;
+import com._data._data.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
@@ -20,8 +23,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 @Service
 @RequiredArgsConstructor
 public class EduProgramService {
@@ -29,9 +34,22 @@ public class EduProgramService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final TranslationService translationService;
+    private final UserRepository userRepository;
 
     @Value("${spring.edu-program.api-key}")
     private String eduProgramApiKey;
+
+    private String getCurrentUserLang() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()
+            || !(auth.getPrincipal() instanceof CustomUserDetails)) {
+            // 인증 정보가 없으면 기본 언어로 'ko' 사용
+            return "ko";
+        }
+        CustomUserDetails ud = (CustomUserDetails) auth.getPrincipal();
+        Users user = userRepository.findByEmail(ud.getUsername());
+        return user.getTranslationLang();
+    }
 
     /**
      *  공공데이터 api에서 프로그램 정보를 가져옴
@@ -40,67 +58,109 @@ public class EduProgramService {
     @Async
     public void fetchAndSavePrograms() {
         try {
-            String url = String.format("http://openapi.seoul.go.kr:8088/%s/json/TEducProg/1/1000/", eduProgramApiKey);
-            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-
-            JsonNode root = objectMapper.readTree(response.getBody());
-            JsonNode items = root.path("TEducProg").path("row");
+            String url = String.format(
+                "http://openapi.seoul.go.kr:8088/%s/json/TEducProg/1/1000/",
+                eduProgramApiKey
+            );
+            JsonNode items = objectMapper
+                .readTree(restTemplate.getForEntity(url, String.class).getBody())
+                .path("TEducProg").path("row");
 
             for (JsonNode item : items) {
                 if (!"KO".equals(item.path("LANG_GB").asText())) continue;
 
+                // 1) JSON → 엔티티 변환 (KO 원본만)
                 EduProgram incoming = convertToEntity(item);
-                
-                // 번역기능
-                String ko = incoming.getTitleNm();
-                incoming.setTitleEn( translationService.translateText(ko, "ko", "en-US") );
-                incoming.setTitleZh( translationService.translateText(ko, "ko", "zh") );
-                incoming.setTitleJa( translationService.translateText(ko, "ko", "ja") );
-                incoming.setTitleVi( translationService.translateText(ko, "ko", "vi") );
-                incoming.setTitleId( translationService.translateText(ko, "ko", "id") );
 
-                Optional<EduProgram> optional = eduProgramRepository.findByTitleNmAndLangGb(
-                    incoming.getTitleNm(), incoming.getLangGb()
-                );
+                // 2) titleNm 으로만 기존 레코드 확인
+                Optional<EduProgram> opt = eduProgramRepository
+                    .findByTitleNm(incoming.getTitleNm());
 
-                if (optional.isPresent()) {
-                    EduProgram existing = optional.get();
-                    if (incoming.getUpdDt().isAfter(existing.getUpdDt())) {
-                        existing.updateFrom(incoming);
+                if (opt.isPresent()) {
+                    EduProgram existing = opt.get();
+
+                    // 3) 기존에 번역이 빠진 필드가 있으면 채워넣고 저장
+                    boolean dirty = false;
+                    String ko = existing.getTitleNm();  // 둘 다 KO 원본은 동일
+
+                    if (existing.getTitleEn() == null || existing.getTitleEn().isBlank()) {
+                        existing.setTitleEn( translationService.translateText(ko, "ko", "en-US") );
+                        dirty = true;
+                    }
+                    if (existing.getTitleZh() == null || existing.getTitleZh().isBlank()) {
+                        existing.setTitleZh( translationService.translateText(ko, "ko", "zh") );
+                        dirty = true;
+                    }
+                    if (existing.getTitleJa() == null || existing.getTitleJa().isBlank()) {
+                        existing.setTitleJa( translationService.translateText(ko, "ko", "ja") );
+                        dirty = true;
+                    }
+                    if (existing.getTitleVi() == null || existing.getTitleVi().isBlank()) {
+                        existing.setTitleVi( translationService.translateText(ko, "ko", "vi") );
+                        dirty = true;
+                    }
+                    if (existing.getTitleId() == null || existing.getTitleId().isBlank()) {
+                        existing.setTitleId( translationService.translateText(ko, "ko", "id") );
+                        dirty = true;
+                    }
+
+                    if (dirty) {
                         eduProgramRepository.save(existing);
                     }
+
                 } else {
+                    // 4) 신규 저장 시에는 KO 원본 + 번역 전부 세팅
+                    String ko = incoming.getTitleNm();
+                    incoming.setTitleEn( translationService.translateText(ko, "ko", "en-US") );
+                    incoming.setTitleZh( translationService.translateText(ko, "ko", "zh") );
+                    incoming.setTitleJa( translationService.translateText(ko, "ko", "ja") );
+                    incoming.setTitleVi( translationService.translateText(ko, "ko", "vi") );
+                    incoming.setTitleId( translationService.translateText(ko, "ko", "id") );
+
                     eduProgramRepository.save(incoming);
                 }
             }
         } catch (Exception e) {
-            // 로깅 필요
             e.printStackTrace();
         }
     }
+
 
     /**
      *  곧 마감되는 프로그램
      *
      * **/
+    @Transactional(readOnly = true)
     public List<EduProgramSimpleDto> findClosingSoonPrograms() {
-        LocalDate today = LocalDate.now();
-        LocalDate oneWeekLater = today.plusDays(7);
+        String lang = getCurrentUserLang();
         return eduProgramRepository
-            .findByAppEndYnFalseAndAppEndDateBetweenOrderByAppEndDateAsc(today, oneWeekLater)
+            .findByAppEndYnFalseAndAppEndDateBetweenOrderByAppEndDateAsc(LocalDate.now(), LocalDate.now().plusDays(7))
             .stream()
-            .map(this::toSimpleDto)
+            .map(ep -> toSimpleDto(ep, lang))
             .toList();
     }
-
     /**
      *  모든 정보
      *
      * **/
-    public Page<EduProgramSimpleDto> findAllPrograms(Boolean isFree, String sort, int page, int size) {
+    @Transactional(readOnly = true)
+    public Page<EduProgramSimpleDto> findAllPrograms(
+        Boolean isFree,
+        String sort,
+        int page,
+        int size
+    ) {
+        // 1) 로그인된 사용자의 설정 언어 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        Users currentUser = userRepository.findByEmail(userDetails.getUsername());
+        String lang = currentUser.getTranslationLang();
+
+        // 2) 페이징·정렬
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sort));
         Page<EduProgram> result;
 
+        // 3) 무료/유료 필터
         if (isFree != null) {
             result = isFree
                 ? eduProgramRepository.findByTuitEtcIsNullOrTuitEtc("", pageRequest)
@@ -109,8 +169,30 @@ public class EduProgramService {
             result = eduProgramRepository.findAll(pageRequest);
         }
 
-        return result.map(this::toSimpleDto);
+        // 4) 각 엔티티를 DTO로 변환하며 번역된 제목 선택
+        return result.map(ep -> {
+            String title;
+            switch (lang) {
+                case "en":
+                case "en-US":
+                case "en-GB": title = ep.getTitleEn(); break;
+                case "zh":    title = ep.getTitleZh(); break;
+                case "ja":    title = ep.getTitleJa(); break;
+                case "vi":    title = ep.getTitleVi(); break;
+                case "id":    title = ep.getTitleId(); break;
+                default:      title = ep.getTitleNm();
+            }
+            return new EduProgramSimpleDto(
+                ep.getId(),
+                title,
+                ep.getAppQual(),
+                ep.getTuitEtc(),
+                ep.getAppEndDate(),
+                (ep.getTuitEtc() == null || ep.getTuitEtc().isBlank())
+            );
+        });
     }
+
 
     public EduProgram findDetailById(Long id) {
         return eduProgramRepository.findById(id)
@@ -140,16 +222,23 @@ public class EduProgramService {
             .build();
     }
 
-    private EduProgramSimpleDto toSimpleDto(EduProgram ep) {
-        String tuit = ep.getTuitEtc();
-        boolean isFree = (tuit == null || tuit.isBlank());
+    private EduProgramSimpleDto toSimpleDto(EduProgram ep, String lang) {
+        String title;
+        switch (lang) {
+            case "en-US", "en-GB": title = ep.getTitleEn(); break;
+            case "zh":             title = ep.getTitleZh(); break;
+            case "ja":             title = ep.getTitleJa(); break;
+            case "vi":             title = ep.getTitleVi(); break;
+            case "id":             title = ep.getTitleId(); break;
+            default:               title = ep.getTitleNm();
+        }
         return new EduProgramSimpleDto(
             ep.getId(),
-            ep.getTitleNm(),
+            title,
             ep.getAppQual(),
-            tuit,
+            ep.getTuitEtc(),
             ep.getAppEndDate(),
-            isFree        // ← 여기
+            (ep.getTuitEtc() == null || ep.getTuitEtc().isBlank())
         );
     }
 
