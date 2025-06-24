@@ -75,4 +75,16 @@ public class TranslationServiceImpl implements TranslationService {
 
         return translation;
     }
+
+    @Override
+    public String translateText(String text, String sourceLang, String targetLang) throws Exception {
+        try {
+            TextResult result = client.translateText(text, sourceLang, targetLang);
+            log.debug("DeepL API 호출 성공 - {}→{} 번역: {}", sourceLang, targetLang, result.getText());
+            return result.getText();
+        } catch (Exception e) {
+            log.error("DeepL API 호출 실패 ({}→{}) - error: {}", sourceLang, targetLang, e.getMessage());
+            throw e;
+        }
+    }
 }
