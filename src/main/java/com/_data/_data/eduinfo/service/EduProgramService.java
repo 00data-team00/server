@@ -1,5 +1,6 @@
 package com._data._data.eduinfo.service;
 
+import com._data._data.aichat.service.TranslationService;
 import com._data._data.eduinfo.dto.EduProgramSimpleDto;
 import com._data._data.eduinfo.entity.EduProgram;
 import com._data._data.eduinfo.repository.EduProgramRepository;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -26,6 +28,7 @@ public class EduProgramService {
     private final EduProgramRepository eduProgramRepository;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final TranslationService translationService;
 
     @Value("${spring.edu-program.api-key}")
     private String eduProgramApiKey;
@@ -34,6 +37,7 @@ public class EduProgramService {
      *  공공데이터 api에서 프로그램 정보를 가져옴
      *
      * **/
+    @Async
     public void fetchAndSavePrograms() {
         try {
             String url = String.format("http://openapi.seoul.go.kr:8088/%s/json/TEducProg/1/1000/", eduProgramApiKey);
@@ -46,6 +50,15 @@ public class EduProgramService {
                 if (!"KO".equals(item.path("LANG_GB").asText())) continue;
 
                 EduProgram incoming = convertToEntity(item);
+                
+                // 번역기능
+                String ko = incoming.getTitleNm();
+                incoming.setTitleEn( translationService.translateText(ko, "ko", "en-US") );
+                incoming.setTitleZh( translationService.translateText(ko, "ko", "zh") );
+                incoming.setTitleJa( translationService.translateText(ko, "ko", "ja") );
+                incoming.setTitleVi( translationService.translateText(ko, "ko", "vi") );
+                incoming.setTitleId( translationService.translateText(ko, "ko", "id") );
+
                 Optional<EduProgram> optional = eduProgramRepository.findByTitleNmAndLangGb(
                     incoming.getTitleNm(), incoming.getLangGb()
                 );
