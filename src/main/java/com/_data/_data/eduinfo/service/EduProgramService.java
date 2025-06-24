@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EduProgramService {
@@ -43,13 +45,17 @@ public class EduProgramService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()
             || !(auth.getPrincipal() instanceof CustomUserDetails)) {
-            // 인증 정보가 없으면 기본 언어로 'ko' 사용
+            log.debug("getCurrentUserLang: 익명(비로그인) 상태, 기본 언어 'ko' 사용");
             return "ko";
         }
         CustomUserDetails ud = (CustomUserDetails) auth.getPrincipal();
+        String email = ud.getUsername();
         Users user = userRepository.findByEmail(ud.getUsername());
-        return user.getTranslationLang();
+        String lang = user.getTranslationLang();
+        log.debug("getCurrentUserLang: 로그인 사용자={} 의 언어 설정={}", email, lang);
+        return lang;
     }
+
 
     /**
      *  공공데이터 api에서 프로그램 정보를 가져옴
@@ -151,10 +157,7 @@ public class EduProgramService {
         int size
     ) {
         // 1) 로그인된 사용자의 설정 언어 가져오기
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        Users currentUser = userRepository.findByEmail(userDetails.getUsername());
-        String lang = currentUser.getTranslationLang();
+        String lang = getCurrentUserLang();
 
         // 2) 페이징·정렬
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sort));
