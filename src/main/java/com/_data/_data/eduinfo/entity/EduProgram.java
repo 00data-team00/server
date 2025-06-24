@@ -17,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * 서울외국인포털 교육프로그램 오픈 api
@@ -27,6 +28,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity
 @Getter
+@Setter
 @Table(name = "edu_program", uniqueConstraints = @UniqueConstraint(columnNames = {"titleNm", "langGb"}))
 public class EduProgram {
     @Id
@@ -71,6 +73,21 @@ public class EduProgram {
 
     private LocalDateTime updDt;
 
+    @Column(length = 500)
+    private String titleEn;   // 영어
+
+    @Column(length = 500)
+    private String titleZh;   // 중국어 간체
+
+    @Column(length = 500)
+    private String titleJa;   // 일본어
+
+    @Column(length = 500)
+    private String titleVi;   // 베트남어
+
+    @Column(length = 500)
+    private String titleId;   // 인도네시아어
+
     public void updateFrom(EduProgram source) {
         this.langGb = source.langGb;
         this.cont = source.cont;
@@ -80,7 +97,7 @@ public class EduProgram {
         this.appEndTime = source.appEndTime;
         this.appEndYn = source.appEndYn;
         this.eduStartDate = source.eduStartDate;
-        this.eduStartTime = source.eduStartTime;
+        this.eduStartTime =  source.eduStartTime;
         this.eduEndDate = source.eduEndDate;
         this.eduEndTime = source.eduEndTime;
         this.appQual = source.appQual;
@@ -89,5 +106,10 @@ public class EduProgram {
         this.pers = source.pers;
         this.regDt = source.regDt;
         this.updDt = source.updDt;
+        this.titleEn = source.titleEn;
+        this.titleZh = source.titleZh;
+        this.titleJa = source.titleJa;
+        this.titleVi = source.titleVi;
+        this.titleId = source.titleId;
     }
 }
