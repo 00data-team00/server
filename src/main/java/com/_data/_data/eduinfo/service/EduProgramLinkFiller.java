@@ -2,6 +2,8 @@ package com._data._data.eduinfo.service;
 
 import com._data._data.eduinfo.entity.EduProgram;
 import com._data._data.eduinfo.repository.EduProgramRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.time.Duration;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -25,13 +27,14 @@ import org.springframework.transaction.annotation.Propagation;
 public class EduProgramLinkFiller {
     private final WebDriver driver;
     private final EduProgramRepository repo;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     // 특수문자 전까지 잘라 검색어 생성
     private String buildQuery(String titleNm) {
         return titleNm.split("[\\[\\(\"“’']")[0];
     }
 
-    @Transactional
     public void fillMissingLinks() {
         List<EduProgram> list = repo.findByAppLinkIsNull();
         log.info("Processing {} programs without links", list.size());
@@ -48,8 +51,8 @@ public class EduProgramLinkFiller {
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    private void processProgram(EduProgram ep) {
+
+    public void processProgram(EduProgram ep) {
         String query = buildQuery(ep.getTitleNm());
         log.debug("Processing program [{}] with query: '{}'", ep.getId(), query);
 
@@ -92,6 +95,8 @@ public class EduProgramLinkFiller {
             String detailUrl = driver.getCurrentUrl();
             ep.setAppLink(detailUrl);
             repo.saveAndFlush(ep);
+            boolean isManaged = entityManager.contains(ep);
+            log.info("영속 컨텍스트 관리 중인가? {}", isManaged);
             log.info("Filled appLink for [{}]: {}", ep.getId(), detailUrl);
 
         } catch (TimeoutException e) {
