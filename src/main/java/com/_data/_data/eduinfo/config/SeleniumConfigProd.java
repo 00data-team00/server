@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 @Profile("prod")
-public final class SeleniumConfigProd {
+public class SeleniumConfigProd {
     @Bean(destroyMethod = "quit")
 
     public WebDriver webDriver(@Value("${selenium.url}") String seleniumUrl) throws Exception {
