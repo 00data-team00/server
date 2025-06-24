@@ -70,7 +70,8 @@ public class EduProgramController {
 
     @PostMapping("/fill-links")
     public String fillLinks() {
-        filler.fillMissingLinks();
-        return "링크 크롤링 완료";
+//        filler.fillMissingLinks();
+//        return "링크 크롤링 완료";
+        return "링크 크롤링 로컬에서 진행";
     }
 }

@@ -55,8 +55,8 @@ app:
     dir: uploads
     base-url: /uploads
 
-selenium:
-  url: http://selenium:4444
+#selenium:
+#  url: http://selenium:4444
 
 logging:
   level:
