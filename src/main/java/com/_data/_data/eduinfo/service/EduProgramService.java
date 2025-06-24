@@ -185,13 +185,19 @@ public class EduProgramService {
                 case "id":    title = ep.getTitleId(); break;
                 default:      title = ep.getTitleNm();
             }
+            // appLink 값 결정
+            String link = ep.getAppLink() != null && !ep.getAppLink().isBlank()
+                ? ep.getAppLink()
+                : "검색 결과가 없습니다.";
+
             return new EduProgramSimpleDto(
                 ep.getId(),
                 title,
                 ep.getAppQual(),
                 ep.getTuitEtc(),
                 ep.getAppEndDate(),
-                (ep.getTuitEtc() == null || ep.getTuitEtc().isBlank())
+                (ep.getTuitEtc() == null || ep.getTuitEtc().isBlank()),
+                link
             );
         });
     }
@@ -235,13 +241,19 @@ public class EduProgramService {
             case "id":             title = ep.getTitleId(); break;
             default:               title = ep.getTitleNm();
         }
+
+        String link = ep.getAppLink() != null && !ep.getAppLink().isBlank()
+            ? ep.getAppLink()
+            : "검색 결과가 없습니다.";
+
         return new EduProgramSimpleDto(
             ep.getId(),
             title,
             ep.getAppQual(),
             ep.getTuitEtc(),
             ep.getAppEndDate(),
-            (ep.getTuitEtc() == null || ep.getTuitEtc().isBlank())
+            (ep.getTuitEtc() == null || ep.getTuitEtc().isBlank()),
+            link
         );
     }
 
