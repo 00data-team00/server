@@ -46,7 +46,7 @@ public class QuizServiceImpl implements QuizService {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        Users user = userRepository.findByEmail(userDetails.getUsername());
+        Users user = userRepository.findByEmailAndIsDeletedFalse(userDetails.getUsername());
         String targetLang = user.getTranslationLang();
 
         Quiz quiz = quizRepository.findQuizWithChoices(quizId).orElseThrow(() -> new QuizNotFoundException(quizId));
