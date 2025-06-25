@@ -3,7 +3,6 @@ package com._data._data.auth.service;
 import com._data._data.auth.entity.CustomUserDetails;
 import com._data._data.user.entity.Users;
 import com._data._data.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -25,7 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             return new CustomUserDetails(user);
         } catch (NumberFormatException e) {
             // userId가 아닌 경우 email로 처리
-            Users user = memberRepository.findByEmail(userId);
+            Users user = memberRepository.findByEmailAndIsDeletedFalse(userId);
             if (user == null) {
                 throw new UsernameNotFoundException("등록된 이메일이 없습니다: " + userId);
             }

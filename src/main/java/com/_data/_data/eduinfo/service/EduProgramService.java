@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,7 +49,7 @@ public class EduProgramService {
         }
         CustomUserDetails ud = (CustomUserDetails) auth.getPrincipal();
         String email = ud.getUsername();
-        Users user = userRepository.findByEmail(ud.getUsername());
+        Users user = userRepository.findByEmailAndIsDeletedFalse(ud.getUsername());
         String lang = user.getTranslationLang();
         log.debug("getCurrentUserLang: 로그인 사용자={} 의 언어 설정={}", email, lang);
         return lang;

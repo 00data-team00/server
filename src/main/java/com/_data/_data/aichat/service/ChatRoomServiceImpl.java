@@ -27,7 +27,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     public ChatRoom creatChatRoom(Long topicId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        Users user = userRepository.findByEmail(userDetails.getUsername());
+        Users user = userRepository.findByEmailAndIsDeletedFalse(userDetails.getUsername());
 
         Long userId = user.getId();
 
@@ -49,7 +49,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     public List<ChatRoom> getChatRooms() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        Users user = userRepository.findByEmail(userDetails.getUsername());
+        Users user = userRepository.findByEmailAndIsDeletedFalse(userDetails.getUsername());
 
         return chatRoomRepository.findByUserIdOrderByUpdatedAtDesc(user.getId());
     }

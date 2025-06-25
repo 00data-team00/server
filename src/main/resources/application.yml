@@ -10,10 +10,12 @@ spring:
       connection-init-sql: SET NAMES utf8mb4
 
 
-  sql:
-    init:
-      mode: always
-      data-locations: classpath:dummy-data/*.sql
+#  sql:
+#    init:
+#      mode: always
+#      data-locations: classpath:dummy-data/*.sql
+
+
 
   jpa:
     defer-datasource-initialization: true
