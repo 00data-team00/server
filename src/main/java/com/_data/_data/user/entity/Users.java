@@ -70,4 +70,7 @@ public class Users {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserGameInfo gameInfo;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 }
