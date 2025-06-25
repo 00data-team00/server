@@ -9,10 +9,13 @@ spring:
     hikari:
       connection-init-sql: SET NAMES utf8mb4
 
+
 #  sql:
 #    init:
 #      mode: always
 #      data-locations: classpath:dummy-data/*.sql
+
+
 
   jpa:
     defer-datasource-initialization: true
@@ -54,8 +57,14 @@ app:
     dir: uploads
     base-url: /uploads
 
+#selenium:
+#  url: http://selenium:4444
+
 logging:
   level:
     org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    com._data._data.eduinfo.service: DEBUG
+    org.springframework.transaction: DEBUG
   file:
     path: /tmp/logs

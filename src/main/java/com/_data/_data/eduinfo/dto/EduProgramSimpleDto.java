@@ -8,5 +8,6 @@ public record EduProgramSimpleDto(
     String appQual,
     String tuitEtc,
     LocalDate appEndDate,
-    boolean isFree
+    boolean isFree,
+    String appLink
 ) {}
