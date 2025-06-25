@@ -40,7 +40,6 @@ public class UserController {
         description = "회원 ID를 전달하여 해당 사용자를 탈퇴 처리합니다."
     )
     @DeleteMapping("/api/user/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ApiResponse deleteUser(@PathVariable("id") Long userId) {
         userService.deleteUser(userId);
         return new ApiResponse(
