@@ -21,7 +21,6 @@ jobs:
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_SECRET_YML }}" > src/main/resources/application-secret.yml
-
       - name: Java 21 설정
         uses: actions/setup-java@v3
         with:
