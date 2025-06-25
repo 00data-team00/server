@@ -24,5 +24,7 @@ public class QuizDto {
 
     private int answer;
 
+    private String wordScript;
+
     private String answerScript;
 }

@@ -1,7 +1,7 @@
 package com._data._data.game.service;
 
-import com._data._data.game.entity.Quiz;
+import com._data._data.game.dto.QuizDto;
 
 public interface QuizService {
-    Quiz getQuiz(Long quizId);
+    QuizDto getQuiz(Long quizId) throws Exception;
 }

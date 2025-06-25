@@ -44,7 +44,7 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-	implementation "com.deepl.api:deepl-java:1.9.0"
+	implementation "com.deepl.api:deepl-java:1.10.1"
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
