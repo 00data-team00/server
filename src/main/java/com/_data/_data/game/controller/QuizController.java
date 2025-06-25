@@ -1,7 +1,6 @@
 package com._data._data.game.controller;
 
 import com._data._data.game.dto.QuizDto;
-import com._data._data.game.entity.Quiz;
 import com._data._data.game.service.QuizService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,18 +23,8 @@ public class QuizController {
             summary = "퀴즈 정보 불러오기",
             description = "해당 ID의 퀴즈 정보를 반환합니다."
     )
-    public QuizDto getQuizById(@RequestParam Long id) {
-        Quiz quiz = quizService.getQuiz(id);
+    public QuizDto getQuizById(@RequestParam Long quizId) throws Exception {
 
-        QuizDto quizDto = new QuizDto();
-        quizDto.setCategory(quiz.getCategory());
-        quizDto.setQuizText(quiz.getQuizText());
-        quizDto.setChoices(quiz.getChoices());
-        quizDto.setImage(quiz.getImage());
-        quizDto.setVoice(quiz.getVoice());
-        quizDto.setAnswer(quiz.getAnswer());
-        quizDto.setAnswerScript(quiz.getAnswerScript());
-
-        return quizDto;
+        return quizService.getQuiz(quizId);
     }
 }
