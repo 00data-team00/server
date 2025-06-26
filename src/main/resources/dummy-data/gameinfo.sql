@@ -7,7 +7,7 @@ INSERT INTO user_game_info (user_id, total_quizzes_solved, quizzes_solved_today,
 (4, 0, 0, 2),
 (3, 0, 0, 0),
 (2, 0, 0, 0),
-(1, 0, 0, 5);
+(1, 0, 0, 5)
 ON DUPLICATE KEY UPDATE
 total_quizzes_solved = VALUES(total_quizzes_solved),
 quizzes_solved_today = VALUES(quizzes_solved_today),
