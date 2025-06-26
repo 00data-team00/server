@@ -6,9 +6,11 @@ import com._data._data.game.entity.Quiz;
 import com._data._data.game.entity.Word;
 import com._data._data.game.exception.QuizNotFoundException;
 import com._data._data.game.repository.QuizRepository;
+import com._data._data.game.repository.UserGameInfoRepository;
 import com._data._data.user.entity.Users;
 import com._data._data.user.repository.UserRepository;
-import com.deepl.api.*;
+import com.deepl.api.DeepLClient;
+import com.deepl.api.TextResult;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -28,6 +28,7 @@ public class QuizServiceImpl implements QuizService {
 
     private final QuizRepository quizRepository;
     private final UserRepository userRepository;
+    private final UserGameInfoRepository userGameInfoRepository;
 
     @Value("${deepl.auth.key}")
     private String authKey;
@@ -38,8 +39,6 @@ public class QuizServiceImpl implements QuizService {
     public void init() {
         this.client = new DeepLClient(authKey);
     }
-
-    private final Map<String, String> glossaryCache = new ConcurrentHashMap<>();
 
     @Override
     public QuizDto getQuiz(Long quizId) throws Exception {
@@ -86,5 +85,15 @@ public class QuizServiceImpl implements QuizService {
             log.error("Quiz DeepL API 호출 실패 - error");
             throw e;
         }
+    }
+
+    @Override
+    public void quizComplete(Long quizId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Users user = userRepository.findByEmailAndIsDeletedFalse(userDetails.getUsername());
+
+        userGameInfoRepository.incrementQuizzesSolvedToday(user.getId());
+        userGameInfoRepository.incrementTotalQuizzesSolved(user.getId());
     }
 }

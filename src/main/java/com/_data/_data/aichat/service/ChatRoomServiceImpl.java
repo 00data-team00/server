@@ -6,6 +6,7 @@ import com._data._data.aichat.exception.TopicNotFoundException;
 import com._data._data.aichat.repository.ChatRoomRepository;
 import com._data._data.aichat.repository.TopicRepository;
 import com._data._data.auth.entity.CustomUserDetails;
+import com._data._data.game.repository.UserGameInfoRepository;
 import com._data._data.user.entity.Users;
 import com._data._data.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final TopicRepository topicRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
+    private final UserGameInfoRepository userGameInfoRepository;
 
     @Override
     public ChatRoom creatChatRoom(Long topicId) {
@@ -41,6 +43,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .description(topic.getDescription())
                 .isFinished(false)
                 .build();
+
+        userGameInfoRepository.incrementChatRoomsCreated(user.getId());
 
         return chatRoomRepository.save(chatRoom);
     }

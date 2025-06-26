@@ -1,25 +1,29 @@
 package com._data._data.user.service;
 
+import com._data._data.aichat.repository.ChatRoomRepository;
 import com._data._data.auth.entity.Auth;
 import com._data._data.auth.repository.AuthRepository;
 import com._data._data.auth.service.MailService;
 import com._data._data.community.entity.Comment;
 import com._data._data.community.entity.Post;
 import com._data._data.community.repository.CommentRepository;
+import com._data._data.community.repository.FollowRepository;
+import com._data._data.community.repository.LikeRepository;
 import com._data._data.community.repository.PostRepository;
+import com._data._data.game.entity.UserGameInfo;
+import com._data._data.game.repository.UserGameInfoRepository;
 import com._data._data.user.dto.SigninRequest;
 import com._data._data.user.entity.Users;
 import com._data._data.user.exception.EmailAlreadyRegisteredException;
 import com._data._data.user.repository.UserRepository;
-import com._data._data.community.repository.LikeRepository;
-import com._data._data.community.repository.FollowRepository;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -33,6 +37,8 @@ public class UserService {
     private final LikeRepository likeRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final UserGameInfoRepository userGameInfoRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
     @Transactional
     public boolean sendAuthcode(String email) throws MessagingException {
@@ -82,6 +88,12 @@ public class UserService {
             .profileImage(DEFAULT_PROFILE_IMAGE)
             .build();
 
+        UserGameInfo userGameInfo = UserGameInfo.builder()
+                .user(user)
+                .build();
+
+        userGameInfoRepository.save(userGameInfo);
+
         return userRepository.save(user);
     }
 
@@ -90,6 +102,8 @@ public class UserService {
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         // Chatroom, gameInfo 삭제
+        userGameInfoRepository.deleteByUser(user);
+        chatRoomRepository.deleteChatRoomByUserId(user.getId());
 
         // Following, like 관계 삭제
         followRepository.deleteByFollower(user);

@@ -5,10 +5,7 @@ import com._data._data.game.service.QuizService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/game")
@@ -26,5 +23,14 @@ public class QuizController {
     public QuizDto getQuizById(@RequestParam Long quizId) throws Exception {
 
         return quizService.getQuiz(quizId);
+    }
+
+    @PatchMapping("/me/complete")
+    @Operation(
+            summary = "퀴즈 완료",
+            description = "퀴즈를 완료하고 유저의 퀴즈 풀이 횟수 관련 정보를 업데이트합니다."
+    )
+    public void completeQuiz(@RequestParam Long quizId) {
+        quizService.quizComplete(quizId);
     }
 }
