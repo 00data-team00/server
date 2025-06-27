@@ -1,5 +1,6 @@
 package com._data._data.aichat.service;
 
+import com._data._data.aichat.dto.TranslateRequestDto;
 import com._data._data.aichat.entity.Message;
 import com._data._data.aichat.entity.Translation;
 import com._data._data.aichat.exception.MessageNotFoundException;
@@ -58,7 +59,7 @@ public class TranslationServiceImpl implements TranslationService {
     }
 
     @Override
-    public Translation getTranslation(Long messageId) throws Exception {
+    public void getTranslation(Long messageId) throws Exception {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         Users user = userRepository.findByEmailAndIsDeletedFalse(userDetails.getUsername());
@@ -68,6 +69,25 @@ public class TranslationServiceImpl implements TranslationService {
         String messageText = message.getText();
 
         Translation translation = translationRepository.findTranslationByMessageIdAndLang(messageId, targetLang).orElse(null);
+
+        if (translation == null) {
+            translateMessage(messageId, messageText, targetLang);
+        }
+
+    }
+
+    @Override
+    public Translation getTranslation(TranslateRequestDto translateRequestDto) throws Exception {
+        Long messageId = translateRequestDto.getMessageId();
+        String targetLang = translateRequestDto.getUserLang();
+
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new MessageNotFoundException(messageId));
+        String messageText = message.getText();
+
+        Translation translation = translationRepository
+                .findTranslationByMessageIdAndLang(messageId, targetLang)
+                .orElse(null);
 
         if (translation == null) {
             translation = translateMessage(messageId, messageText, targetLang);

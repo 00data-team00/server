@@ -2,6 +2,7 @@ package com._data._data.game.service;
 
 import com._data._data.auth.entity.CustomUserDetails;
 import com._data._data.game.dto.QuizDto;
+import com._data._data.game.dto.QuizRequestDto;
 import com._data._data.game.entity.Quiz;
 import com._data._data.game.entity.Word;
 import com._data._data.game.exception.QuizNotFoundException;
@@ -41,12 +42,10 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    public QuizDto getQuiz(Long quizId) throws Exception {
+    public QuizDto getQuiz(QuizRequestDto quizRequestDto) throws Exception {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        Users user = userRepository.findByEmailAndIsDeletedFalse(userDetails.getUsername());
-        String targetLang = user.getTranslationLang();
+        String targetLang = quizRequestDto.getUserLang();
+        Long quizId = quizRequestDto.getQuizId();
 
         Quiz quiz = quizRepository.findQuizWithChoices(quizId).orElseThrow(() -> new QuizNotFoundException(quizId));
 

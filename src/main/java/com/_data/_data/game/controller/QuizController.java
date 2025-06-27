@@ -1,6 +1,7 @@
 package com._data._data.game.controller;
 
 import com._data._data.game.dto.QuizDto;
+import com._data._data.game.dto.QuizRequestDto;
 import com._data._data.game.service.QuizService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,14 +16,14 @@ public class QuizController {
 
     private final QuizService quizService;
 
-    @GetMapping("/me/quiz")
+    @GetMapping("/quiz")
     @Operation(
             summary = "퀴즈 정보 불러오기",
             description = "해당 ID의 퀴즈 정보를 반환합니다."
     )
-    public QuizDto getQuizById(@RequestParam Long quizId) throws Exception {
+    public QuizDto getQuizById(@RequestBody QuizRequestDto quizRequestDto) throws Exception {
 
-        return quizService.getQuiz(quizId);
+        return quizService.getQuiz(quizRequestDto);
     }
 
     @PatchMapping("/me/complete")
