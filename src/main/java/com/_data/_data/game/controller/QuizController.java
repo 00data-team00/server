@@ -16,7 +16,7 @@ public class QuizController {
 
     private final QuizService quizService;
 
-    @GetMapping("/me/quiz")
+    @GetMapping("/quiz")
     @Operation(
             summary = "퀴즈 정보 불러오기",
             description = "해당 ID의 퀴즈 정보를 반환합니다."
