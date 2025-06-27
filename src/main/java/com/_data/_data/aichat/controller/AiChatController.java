@@ -74,7 +74,7 @@ public class AiChatController {
             summary = "메세지 번역",
             description = "해당 메세지를 번역한 결과를 반환합니다."
     )
-    @PostMapping("/me/translate")
+    @PostMapping("/translate")
     public TranslationResponseDto translateText(@RequestBody TranslateRequestDto translateRequestDto) throws Exception {
         Translation translation = translationService.getTranslation(translateRequestDto);
         TranslationResponseDto translationResponseDto = new TranslationResponseDto();
