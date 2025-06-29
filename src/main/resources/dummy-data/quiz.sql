@@ -2,9 +2,11 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 2. 기존 데이터 삭제 (자식 → 부모 순서)
-DELETE FROM quiz_choice;
-DELETE FROM quizzes;
-DELETE FROM choices;
+TRUNCATE TABLE quiz_choice;
+TRUNCATE TABLE quizzes;
+TRUNCATE TABLE choices;
+ALTER TABLE quizzes AUTO_INCREMENT = 1;
+ALTER TABLE choices AUTO_INCREMENT = 1;
 
 -- 3. Word(choices) 테이블 데이터 삽입
 INSERT INTO choices (word, description) VALUES
