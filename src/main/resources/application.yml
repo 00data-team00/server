@@ -15,8 +15,6 @@ spring:
       mode: always
       data-locations: classpath:dummy-data/*.sql
 
-
-
   jpa:
     defer-datasource-initialization: true
     hibernate:

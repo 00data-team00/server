@@ -4,12 +4,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
-public class QuizRequestDto {
+public class QuizListDto {
 
-    private Long level;
-
-    private String userLang;
+    List<QuizDto> quizDtoList = new ArrayList<>();
 }
