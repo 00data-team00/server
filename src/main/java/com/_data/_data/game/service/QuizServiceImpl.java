@@ -2,6 +2,7 @@ package com._data._data.game.service;
 
 import com._data._data.auth.entity.CustomUserDetails;
 import com._data._data.game.dto.QuizDto;
+import com._data._data.game.dto.QuizListDto;
 import com._data._data.game.dto.QuizRequestDto;
 import com._data._data.game.entity.Quiz;
 import com._data._data.game.entity.Word;
@@ -20,6 +21,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -42,48 +45,55 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    public QuizDto getQuiz(QuizRequestDto quizRequestDto) throws Exception {
+    public QuizListDto getQuizzes(QuizRequestDto quizRequestDto) throws Exception {
 
         String targetLang = quizRequestDto.getUserLang();
-        Long quizId = quizRequestDto.getQuizId();
+        Long level = quizRequestDto.getLevel();
 
-        Quiz quiz = quizRepository.findQuizWithChoices(quizId).orElseThrow(() -> new QuizNotFoundException(quizId));
+        List<Quiz> quizzes = quizRepository.findQuizzesByLevelWithChoices(level);
 
-        QuizDto quizDto = new QuizDto();
-        quizDto.setCategory(quiz.getCategory());
-        quizDto.setChoices(quiz.getChoices());
-        quizDto.setImage(quiz.getImage());
-        quizDto.setVoice(quiz.getVoice());
-
-        int answer = quiz.getAnswer();
-        quizDto.setAnswer(answer);
-
-        try {
-            TextResult result = client.translateText(quiz.getQuizText(), "ko", targetLang);
-            log.debug("DeepL API 호출 성공 - Quiz Text 번역 결과: {}", result.getText());
-            quizDto.setQuizText(result.getText());
-
-            Word answerWord = quiz.getChoices().get(answer - 1);
-            result = client.translateText(answerWord.getDescription(), "ko", targetLang);
-            log.debug("DeepL API 호출 성공 - Word Description 번역 결과: {}", result.getText());
-            quizDto.setWordScript(result.getText());
-
-            String placeholder = "###" + UUID.randomUUID() + "###";
-            String processedScript = quiz.getAnswerScript()
-                    .replace(answerWord.getWord(), placeholder);
-
-            TextResult resultScript = client.translateText(processedScript, "ko", targetLang);
-            log.debug("DeepL API 호출 성공 - Answer Script 번역 결과: {}", result.getText());
-            String finalScript = resultScript.getText()
-                    .replace(placeholder, answerWord.getWord());
-
-            quizDto.setAnswerScript(finalScript);
-
-            return quizDto;
-        } catch (Exception e) {
-            log.error("Quiz DeepL API 호출 실패 - error");
-            throw e;
+        if (quizzes.isEmpty()) {
+            throw new QuizNotFoundException(level);     // id 대신 level 전달
         }
+
+        List<QuizDto> dtoList = new ArrayList<>();
+
+        for (Quiz quiz : quizzes) {
+            QuizDto quizDto = new QuizDto();
+            quizDto.setCategory(quiz.getCategory());
+            quizDto.setChoices(quiz.getChoices());
+            quizDto.setImage(quiz.getImage());
+            quizDto.setVoice(quiz.getVoice());
+            quizDto.setAnswer(quiz.getAnswer());
+
+            try {
+                // 1) 퀴즈 문장 번역
+                TextResult result = client.translateText(quiz.getQuizText(), "ko", targetLang);
+                quizDto.setQuizText(result.getText());
+
+                // 2) 정답 단어 설명 번역
+                Word answerWord = quiz.getChoices().get(quiz.getAnswer() - 1);
+                result = client.translateText(answerWord.getDescription(), "ko", targetLang);
+                quizDto.setWordScript(result.getText());
+
+                // 3) 정답 스크립트 번역 (정답 단어 보존)
+                String placeholder = "###" + UUID.randomUUID() + "###";
+                String processed = quiz.getAnswerScript().replace(answerWord.getWord(), placeholder);
+                TextResult scriptResult = client.translateText(processed, "ko", targetLang);
+                String finalScript = scriptResult.getText().replace(placeholder, answerWord.getWord());
+                quizDto.setAnswerScript(finalScript);
+
+            } catch (Exception e) {
+                log.error("DeepL API 호출 실패 - quiz id {}: {}", quiz.getId(), e.getMessage());
+                throw e;
+            }
+
+            dtoList.add(quizDto);
+        }
+
+        QuizListDto listDto = new QuizListDto();
+        listDto.setQuizDtoList(dtoList);
+        return listDto;
     }
 
     @Override

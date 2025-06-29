@@ -19,6 +19,8 @@ public class Quiz {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Long level;
+
     private String category;
 
     private String quizText;
