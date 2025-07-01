@@ -43,7 +43,7 @@ public class EduProgramService {
     @Value("${app.upload.base-url}")
     private String baseUrl;
 
-    private static final String DEFAULT_THUMBNAIL = "/uploads/eduinfo/blank.jpg";
+//    private static final String DEFAULT_THUMBNAIL = "이미지가 없습니다.";
 
     /**
      * 썸네일 URL을 반환하는 메소드 (null인 경우 기본 이미지 반환)
@@ -51,7 +51,7 @@ public class EduProgramService {
     private String getThumbnailUrl(String thumbnailUrl) {
         return (thumbnailUrl != null && !thumbnailUrl.isBlank())
             ? thumbnailUrl
-            : DEFAULT_THUMBNAIL;
+            : null;
     }
 
     private String getCurrentUserLang() {
