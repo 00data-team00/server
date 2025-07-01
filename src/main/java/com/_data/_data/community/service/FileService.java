@@ -70,6 +70,23 @@ public class FileService {
         Path root = Paths.get(System.getProperty("user.dir")).resolve(uploadDir);
         Files.createDirectories(root.resolve("post"));
         Files.createDirectories(root.resolve("profile"));
+        Files.createDirectories(root.resolve("eduinfo"));
+
+
+    }
+
+    /**
+     * eduinfo 디렉토리의 기본 이미지 경로 반환
+     */
+    public String getDefaultEduInfoImage() {
+        return "/eduinfo/blank.jpg";
+    }
+
+    /**
+     * eduinfo용 파일 저장
+     */
+    public String storeEduInfo(MultipartFile file, Long id) throws IOException {
+        return store(file, "eduinfo", id, id);
     }
 
 }

@@ -40,6 +40,20 @@ public class EduProgramService {
     @Value("${spring.edu-program.api-key}")
     private String eduProgramApiKey;
 
+    @Value("${app.upload.base-url}")
+    private String baseUrl;
+
+    private static final String DEFAULT_THUMBNAIL = "/uploads/eduinfo/blank.jpg";
+
+    /**
+     * 썸네일 URL을 반환하는 메소드 (null인 경우 기본 이미지 반환)
+     */
+    private String getThumbnailUrl(String thumbnailUrl) {
+        return (thumbnailUrl != null && !thumbnailUrl.isBlank())
+            ? thumbnailUrl
+            : DEFAULT_THUMBNAIL;
+    }
+
     private String getCurrentUserLang() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()
@@ -189,6 +203,8 @@ public class EduProgramService {
                 ? ep.getAppLink()
                 : "검색 결과가 없습니다.";
 
+            String thumbnailUrl = getThumbnailUrl(ep.getThumbnailUrl());
+
             return new EduProgramSimpleDto(
                 ep.getId(),
                 title,
@@ -196,7 +212,8 @@ public class EduProgramService {
                 ep.getTuitEtc(),
                 ep.getAppEndDate(),
                 (ep.getTuitEtc() == null || ep.getTuitEtc().isBlank()),
-                link
+                link,
+                thumbnailUrl
             );
         });
     }
@@ -227,6 +244,7 @@ public class EduProgramService {
             .pers(item.path("PERS").asInt())
             .regDt(parseDateTime(item, "REG_DT"))
             .updDt(parseDateTime(item, "UPD_DT"))
+            .thumbnailUrl(null)
             .build();
     }
 
@@ -245,6 +263,8 @@ public class EduProgramService {
             ? ep.getAppLink()
             : "검색 결과가 없습니다.";
 
+        String thumbnailUrl = getThumbnailUrl(ep.getThumbnailUrl());
+
         return new EduProgramSimpleDto(
             ep.getId(),
             title,
@@ -252,7 +272,8 @@ public class EduProgramService {
             ep.getTuitEtc(),
             ep.getAppEndDate(),
             (ep.getTuitEtc() == null || ep.getTuitEtc().isBlank()),
-            link
+            link,
+            thumbnailUrl
         );
     }
 
