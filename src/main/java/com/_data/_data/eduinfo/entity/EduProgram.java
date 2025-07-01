@@ -91,6 +91,8 @@ public class EduProgram {
     @Column(length = 1000)
     private String appLink;
 
+    @Column(length = 1000)
+    private String thumbnailUrl;
     public void updateFrom(EduProgram source) {
         this.langGb = source.langGb;
         this.cont = source.cont;
@@ -115,5 +117,6 @@ public class EduProgram {
         this.titleVi = source.titleVi;
         this.titleId = source.titleId;
         this.appLink = source.appLink;
+        this.thumbnailUrl = source.thumbnailUrl;  // 썸네일 URL 업데이트 추가
     }
 }
