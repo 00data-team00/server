@@ -2,6 +2,7 @@ package com._data._data.community.service;
 
 import com._data._data.community.dto.CommentDto;
 import com._data._data.community.dto.PostAuthorProfileDto;
+import com._data._data.community.dto.PostDetailDto;
 import com._data._data.community.dto.PostWithAuthorProfileDto;
 import com._data._data.community.dto.ProfileDto;
 import com._data._data.community.entity.Like;
@@ -273,4 +274,22 @@ public class PostService {
             return new PostWithAuthorProfileDto(dto, authorProfile);
         }).toList();
     }
+
+    /**
+     * 🔥 새로 추가: 포스트 상세 조회 (댓글 포함)
+     */
+    @Transactional(readOnly = true)
+    public PostDetailDto getPostDetail(Long postId) {
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new EntityNotFoundException("포스트를 찾을 수 없습니다."));
+
+        // 댓글을 오래된 순으로 조회 (일반적인 댓글 순서)
+        List<Comment> comments = commentRepository.findByPostOrderByCreatedAtAsc(post);
+        List<CommentDto> commentDtos = comments.stream()
+            .map(CommentDto::from)
+            .toList();
+
+        return PostDetailDto.fromWithComments(post, commentDtos);
+    }
+
 }
