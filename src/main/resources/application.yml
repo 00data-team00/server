@@ -12,8 +12,8 @@ spring:
 
   sql:
     init:
-      mode: always
-      data-locations: classpath:dummy-data/*.sql
+      mode: never
+#      data-locations: classpath:dummy-data/*.sql
 
   jpa:
     defer-datasource-initialization: true
@@ -30,9 +30,11 @@ spring:
       chat:
         completions-path: /chat/completions
         options:
-          model: llama-3.1-sonar-large-128k-online
-          temperature: 0.2
-          max-completion-tokens: 100
+          model: sonar-pro
+          temperature: 0.3
+          max-completion-tokens: 150
+          top_p: 0.9
+          frequency_penalty: 0.1
     model:
       embedding: none
 
