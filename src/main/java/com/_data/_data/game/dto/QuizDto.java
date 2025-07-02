@@ -12,6 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 public class QuizDto {
 
+    private Long quizId;
+
     private String category;
 
     private String quizText;
