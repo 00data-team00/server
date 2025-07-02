@@ -18,5 +18,5 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     @Query("select distinct q from Quiz q join fetch q.choices where q.level = :level")
     List<Quiz> findQuizzesByLevelWithChoices(@Param("level") Long level);
 
-    Long getCountByLevel(Long level);
+    Long countByLevel(Long level);
 }
