@@ -78,13 +78,17 @@ public class QuizServiceImpl implements QuizService {
                 result = client.translateText(answerWord.getDescription(), "ko", targetLang);
                 quizDto.setWordScript(result.getText());
 
-                // 3) 정답 스크립트 번역 (정답 단어 보존)
-                String placeholder = "###" + UUID.randomUUID() + "###";
-                String processed = quiz.getAnswerScript().replace(answerWord.getWord(), placeholder);
-                TextResult scriptResult = client.translateText(processed, "ko", targetLang);
-                String finalScript = scriptResult.getText().replace(placeholder, answerWord.getWord());
-                quizDto.setAnswerScript(finalScript);
-
+                if (quiz.getAnswerScript() == null) {
+                    quizDto.setAnswerScript(null);
+                }
+                else {
+                    // 3) 정답 스크립트 번역 (정답 단어 보존)
+                    String placeholder = "###" + UUID.randomUUID() + "###";
+                    String processed = quiz.getAnswerScript().replace(answerWord.getWord(), placeholder);
+                    TextResult scriptResult = client.translateText(processed, "ko", targetLang);
+                    String finalScript = scriptResult.getText().replace(placeholder, answerWord.getWord());
+                    quizDto.setAnswerScript(finalScript);
+                }
             } catch (Exception e) {
                 log.error("DeepL API 호출 실패 - quiz id {}: {}", quiz.getId(), e.getMessage());
                 throw e;
