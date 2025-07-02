@@ -35,6 +35,7 @@ public class UserGameInfoServiceImpl implements UserGameInfoService {
         userGameInfoResponse.setChatRoomsCreated(userGameInfo.getChatRoomsCreated());
         userGameInfoResponse.setQuizzesSolvedToday(userGameInfo.getQuizzesSolvedToday());
         userGameInfoResponse.setTotalQuizzesSolved(userGameInfo.getTotalQuizzesSolved());
+        userGameInfoResponse.setLevelCompleted(userGameInfo.getLevelCompleted());
 
         return userGameInfoResponse;
     }
