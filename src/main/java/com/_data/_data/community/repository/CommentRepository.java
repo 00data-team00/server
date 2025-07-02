@@ -11,4 +11,7 @@ import com._data._data.user.entity.Users;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     void deleteByPost(Post post);
     List<Comment> findByCommenter(Users commenter);
+    List<Comment> findByPostOrderByCreatedAtAsc(Post post);
+    List<Comment> findByPostOrderByCreatedAtDesc(Post post);
+
 }
