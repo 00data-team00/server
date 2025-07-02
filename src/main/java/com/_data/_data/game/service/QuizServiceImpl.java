@@ -112,7 +112,7 @@ public class QuizServiceImpl implements QuizService {
         userGameInfoRepository.incrementCurrentCountInLevel(user.getId());
 
         Long currentCountInLevel = userGameInfoRepository.getCurrentCountInLevelByUserId(user.getId());
-        Long countByLevel = quizRepository.getCountByLevel(quiz.getLevel());
+        Long countByLevel = quizRepository.countByLevel(quiz.getLevel());
 
         if (Objects.equals(currentCountInLevel, countByLevel)) {
             userGameInfoRepository.updateLevelCompleted(user.getId(), quiz.getLevel());
