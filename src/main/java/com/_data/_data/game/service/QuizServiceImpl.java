@@ -61,6 +61,7 @@ public class QuizServiceImpl implements QuizService {
 
         for (Quiz quiz : quizzes) {
             QuizDto quizDto = new QuizDto();
+            quizDto.setQuizId(quiz.getId());
             quizDto.setCategory(quiz.getCategory());
             quizDto.setChoices(quiz.getChoices());
             quizDto.setImage(quiz.getImage());
