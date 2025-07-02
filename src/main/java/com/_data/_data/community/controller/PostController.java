@@ -3,6 +3,7 @@ package com._data._data.community.controller;
 import com._data._data.auth.entity.CustomUserDetails;
 import com._data._data.common.dto.ApiResponse;
 import com._data._data.community.dto.CommentDto;
+import com._data._data.community.dto.PostDetailDto;
 import com._data._data.community.dto.PostDto;
 import com._data._data.community.dto.PostListDto;
 import com._data._data.community.dto.PostWithAuthorProfileDto;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +27,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostController {
     private final PostService postService;
+    /**
+     * 🔥 새로 추가: 포스트 상세 조회 (댓글 포함)
+     */
+    @Operation(
+        summary = "포스트 상세 조회",
+        description = "포스트 ID로 포스트 상세 정보와 댓글 목록을 조회합니다."
+    )
+    @GetMapping("/posts/{postId}/detail")
+    public ResponseEntity<PostDetailDto> getPostDetail(@PathVariable Long postId) {
+        PostDetailDto postDetail = postService.getPostDetail(postId);
+        return ResponseEntity.ok(postDetail);
+    }
 
     @Operation(
         summary = "포스트 작성",

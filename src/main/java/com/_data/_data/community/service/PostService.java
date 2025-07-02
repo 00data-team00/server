@@ -2,12 +2,15 @@ package com._data._data.community.service;
 
 import com._data._data.community.dto.CommentDto;
 import com._data._data.community.dto.PostAuthorProfileDto;
+import com._data._data.community.dto.PostDetailDto;
 import com._data._data.community.dto.PostWithAuthorProfileDto;
 import com._data._data.community.dto.ProfileDto;
 import com._data._data.community.entity.Like;
 import com._data._data.community.entity.Comment;
 import com._data._data.community.entity.Follow;
 import com._data._data.community.repository.FollowRepository;
+import com._data._data.user.entity.Nation;
+import com._data._data.user.service.NationService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
@@ -33,6 +36,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final FileService fileService;
     private final FollowRepository followRepository;
+    private final NationService nationService; // 🔥 추가
 
     @Transactional
     public PostDto createPost(Users user, String content, MultipartFile image) throws IOException {
@@ -163,14 +167,11 @@ public class PostService {
             && targetUser.getFollowers().stream()
             .anyMatch(f -> f.getFollower().equals(currentUser));
 
-        return new ProfileDto(
-            targetUser.getName(),
-            targetUser.getProfileImage(),
-            (long) targetUser.getPosts().size(),
-            (long) targetUser.getFollowers().size(),
-            (long) targetUser.getFollowing().size(),
-            isFollowing
-        );
+        Nation nation = nationService.getNationById(targetUser.getNations());
+        String nationName = nation != null ? nation.getName() : "Unknown";
+        String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
+
+        return ProfileDto.from(targetUser, isFollowing, nationName, nationNameKo);
     }
 
     /**
@@ -191,6 +192,12 @@ public class PostService {
             PostDto dto = PostDto.from(post);
             boolean isFollowing = true; // by definition, author is followed
             boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+
+            // 🔥 국가 정보 추가
+            Nation nation = nationService.getNationById(post.getAuthor().getNations());
+            String nationName = nation != null ? nation.getName() : "Unknown";
+            String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
+
             var authorProfile = new PostAuthorProfileDto(
                 post.getAuthor().getName(),
                 post.getAuthor().getProfileImage(),
@@ -198,7 +205,9 @@ public class PostService {
                 (long) post.getAuthor().getFollowers().size(),
                 (long) post.getAuthor().getFollowing().size(),
                 isFollowing,
-                isLiked
+                isLiked,
+                nationName,    // 🔥 추가
+                nationNameKo   // 🔥 추가
             );
             return new PostWithAuthorProfileDto(dto, authorProfile);
         }).toList();
@@ -215,6 +224,11 @@ public class PostService {
             PostDto dto = PostDto.from(post);
             boolean isFollowing = followRepository.existsByFollowerAndFollowee(currentUser, post.getAuthor());
             boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+            // 🔥 국가 정보 추가
+            Nation nation = nationService.getNationById(post.getAuthor().getNations());
+            String nationName = nation != null ? nation.getName() : "Unknown";
+            String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
+
             var authorProfile = new PostAuthorProfileDto(
                 post.getAuthor().getName(),
                 post.getAuthor().getProfileImage(),
@@ -222,7 +236,9 @@ public class PostService {
                 (long) post.getAuthor().getFollowers().size(),
                 (long) post.getAuthor().getFollowing().size(),
                 isFollowing,
-                isLiked
+                isLiked,
+                nationName,    // 🔥 추가
+                nationNameKo   // 🔥 추가
             );
             return new PostWithAuthorProfileDto(dto, authorProfile);
         }).toList();
@@ -239,6 +255,11 @@ public class PostService {
             PostDto dto = PostDto.from(post);
             boolean isFollowing = followRepository.existsByFollowerAndFollowee(currentUser, post.getAuthor());
             boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+            // 🔥 국가 정보 추가
+            Nation nation = nationService.getNationById(post.getAuthor().getNations());
+            String nationName = nation != null ? nation.getName() : "Unknown";
+            String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
+
             var authorProfile = new PostAuthorProfileDto(
                 post.getAuthor().getName(),
                 post.getAuthor().getProfileImage(),
@@ -246,9 +267,29 @@ public class PostService {
                 (long) post.getAuthor().getFollowers().size(),
                 (long) post.getAuthor().getFollowing().size(),
                 isFollowing,
-                isLiked
+                isLiked,
+                nationName,    // 🔥 추가
+                nationNameKo   // 🔥 추가
             );
             return new PostWithAuthorProfileDto(dto, authorProfile);
         }).toList();
     }
+
+    /**
+     * 🔥 새로 추가: 포스트 상세 조회 (댓글 포함)
+     */
+    @Transactional(readOnly = true)
+    public PostDetailDto getPostDetail(Long postId) {
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new EntityNotFoundException("포스트를 찾을 수 없습니다."));
+
+        // 댓글을 오래된 순으로 조회 (일반적인 댓글 순서)
+        List<Comment> comments = commentRepository.findByPostOrderByCreatedAtAsc(post);
+        List<CommentDto> commentDtos = comments.stream()
+            .map(CommentDto::from)
+            .toList();
+
+        return PostDetailDto.fromWithComments(post, commentDtos);
+    }
+
 }
