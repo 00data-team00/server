@@ -97,13 +97,30 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
+    public void deleteUserByEmail(String email) {
+        Users user = userRepository.findByEmailAndIsDeletedFalse(email);
+        if (user == null) {
+            throw new EntityNotFoundException("User not found with email: " + email);
+        }
+
+        deleteUserInternal(user);
+    }
+
+    @Transactional
     public void deleteUser(Long userId) {
         Users user = userRepository.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
+        deleteUserInternal(user);
+    }
+
+    private void deleteUserInternal(Users user) {
+        Long userId = user.getId();
+
         // Chatroom, gameInfo 삭제
         userGameInfoRepository.deleteByUser(user);
-        chatRoomRepository.deleteChatRoomByUserId(user.getId());
+        chatRoomRepository.deleteChatRoomByUserId(userId);
 
         // Following, like 관계 삭제
         followRepository.deleteByFollower(user);
@@ -115,7 +132,6 @@ public class UserService {
         for (Post post : posts) {
             post.setContent("[삭제된 게시글입니다]");
             post.setImageUrl(null);
-            // 좋아요·댓글 수도 초기화할 수도 있고, 그냥 냅둬도 됩니다.
             postRepository.save(post);
         }
 
