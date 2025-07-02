@@ -7,8 +7,10 @@ import com._data._data.user.entity.Users;
 import com._data._data.user.exception.EmailAlreadyRegisteredException;
 import com._data._data.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -42,6 +44,22 @@ public class UserController {
     @DeleteMapping("/api/user/{id}")
     public ApiResponse deleteUser(@PathVariable("id") Long userId) {
         userService.deleteUser(userId);
+        return new ApiResponse(
+            true,
+            "회원 탈퇴가 완료되었습니다."
+        );
+    }
+
+    @Operation(
+        summary     = "회원 탈퇴 (이메일 기반)",
+        description = "이메일을 전달하여 해당 사용자를 탈퇴 처리합니다."
+    )
+    @DeleteMapping("/api/user/email/{email}")
+    public ApiResponse deleteUserByEmail(
+        @Parameter(description = "탈퇴할 사용자의 이메일 주소")
+        @PathVariable("email") @Email String email
+    ) {
+        userService.deleteUserByEmail(email);
         return new ApiResponse(
             true,
             "회원 탈퇴가 완료되었습니다."
