@@ -26,6 +26,10 @@ public class UserGameInfo {
 
     private Long chatRoomsCreated     = 0L;
 
+    private Long levelCompleted = 0L;
+
+    private Long currentCountInLevel = 0L;
+
     // 추후 추가 정보
 //    private Integer currentStreak;   // 연속 학습 횟수
 //    private Integer level;

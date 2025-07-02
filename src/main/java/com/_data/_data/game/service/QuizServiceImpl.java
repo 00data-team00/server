@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -102,7 +103,20 @@ public class QuizServiceImpl implements QuizService {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         Users user = userRepository.findByEmailAndIsDeletedFalse(userDetails.getUsername());
 
+        Quiz quiz = quizRepository.findById(quizId).orElseThrow(() -> new QuizNotFoundException(quizId, true));
+
         userGameInfoRepository.incrementQuizzesSolvedToday(user.getId());
         userGameInfoRepository.incrementTotalQuizzesSolved(user.getId());
+
+        userGameInfoRepository.incrementCurrentCountInLevel(user.getId());
+
+        Long currentCountInLevel = userGameInfoRepository.getCurrentCountInLevelByUserId(user.getId());
+        Long countByLevel = quizRepository.getCountByLevel(quiz.getLevel());
+
+        if (Objects.equals(currentCountInLevel, countByLevel)) {
+            userGameInfoRepository.updateLevelCompleted(user.getId(), quiz.getLevel());
+            userGameInfoRepository.resetCurrentCountInLevel(user.getId());
+        }
+
     }
 }

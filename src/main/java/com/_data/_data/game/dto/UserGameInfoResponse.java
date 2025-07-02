@@ -16,4 +16,6 @@ public class UserGameInfoResponse {
     private Long quizzesSolvedToday;
 
     private Long chatRoomsCreated;
+
+    private Long levelCompleted;
 }
