@@ -9,16 +9,20 @@ public record PostAuthorProfileDto(
     Long followerCount,
     Long followingCount,
     boolean isFollowing,
-    boolean isLiked
+    boolean isLiked,
+    String nationName,     // 🔥 추가: 국가 영문명
+    String nationNameKo
 ) {
-    public static ProfileDto from(Users user, boolean isFollowing) {
+    public static ProfileDto from(Users user, boolean isFollowing, String nationName, String nationNameKo) {
         return new ProfileDto(
             user.getName(),
             user.getProfileImage(),
             (long) user.getPosts().size(),
             (long) user.getFollowers().size(),
             (long) user.getFollowing().size(),
-            isFollowing
+            isFollowing,
+            nationName,
+            nationNameKo
         );
     }
 }
