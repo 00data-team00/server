@@ -207,10 +207,13 @@ public class PostService {
         // Fetch posts by followees
         List<Post> posts = postRepository.findByAuthorInOrderByCreatedAtDesc(followees);
 
+
         return posts.stream().map(post -> {
-            PostDto dto = PostDto.from(post);
             boolean isFollowing = true; // by definition, author is followed
             boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+
+            // 🔥 수정: PostDto에도 isLiked 적용
+            PostDto dto = PostDto.fromWithLiked(post, isLiked);
 
             // 🔥 국가 정보 추가
             Nation nation = nationService.getNationById(post.getAuthor().getNations());
@@ -240,9 +243,11 @@ public class PostService {
         List<Post> posts = postRepository.findByAuthor_NationsOrderByCreatedAtDesc(currentUser.getNations());
 
         return posts.stream().map(post -> {
-            PostDto dto = PostDto.from(post);
             boolean isFollowing = followRepository.existsByFollowerAndFollowee(currentUser, post.getAuthor());
             boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+
+            PostDto dto = PostDto.fromWithLiked(post, isLiked);
+
             // 🔥 국가 정보 추가
             Nation nation = nationService.getNationById(post.getAuthor().getNations());
             String nationName = nation != null ? nation.getName() : "Unknown";
@@ -271,13 +276,14 @@ public class PostService {
         List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
 
         return posts.stream().map(post -> {
-            PostDto dto = PostDto.from(post);
             boolean isFollowing = currentUser != null &&
                 followRepository.existsByFollowerAndFollowee(currentUser, post.getAuthor());
             boolean isLiked = currentUser != null &&
                 likeRepository.existsByPostAndUser(post, currentUser);
 
-            // 🔥 국가 정보 추가
+            // 🔥 수정: PostDto에도 isLiked 적용
+            PostDto dto = PostDto.fromWithLiked(post, isLiked);
+
             Nation nation = nationService.getNationById(post.getAuthor().getNations());
             String nationName = nation != null ? nation.getName() : "Unknown";
             String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
@@ -296,6 +302,7 @@ public class PostService {
             return new PostWithAuthorProfileDto(dto, authorProfile);
         }).toList();
     }
+
 
     /**
      * 🔥 새로 추가: 포스트 상세 조회 (댓글 포함)
@@ -328,11 +335,11 @@ public class PostService {
         List<Post> posts = postRepository.findByAuthorOrderByCreatedAtDesc(targetUser);
 
         return posts.stream().map(post -> {
-            PostDto dto = PostDto.from(post);
             boolean isFollowing = currentUser != null &&
                 followRepository.existsByFollowerAndFollowee(currentUser, targetUser);
             boolean isLiked = currentUser != null &&
                 likeRepository.existsByPostAndUser(post, currentUser);
+            PostDto dto = PostDto.fromWithLiked(post, isLiked);
 
             // 🔥 국가 정보 추가
             Nation nation = nationService.getNationById(targetUser.getNations());
