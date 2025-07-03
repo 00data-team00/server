@@ -3,18 +3,18 @@ package com._data._data.community.dto;
 import com._data._data.user.entity.Users;
 
 public record PostAuthorProfileDto(
+    Long id,
     String name,
     String profileImage,
     Long postCount,
     Long followerCount,
     Long followingCount,
     boolean isFollowing,
-    boolean isLiked,
     String nationName,     // 🔥 추가: 국가 영문명
     String nationNameKo
 ) {
-    public static ProfileDto from(Users user, boolean isFollowing, String nationName, String nationNameKo) {
-        return new ProfileDto(
+    public static PostAuthorProfileDto  from(Users user, boolean isFollowing, String nationName, String nationNameKo) {
+        return new PostAuthorProfileDto (
             user.getId(),
             user.getName(),
             user.getProfileImage(),
