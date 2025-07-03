@@ -221,13 +221,13 @@ public class PostService {
             String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
 
             var authorProfile = new PostAuthorProfileDto(
+                post.getAuthor().getId(),
                 post.getAuthor().getName(),
                 post.getAuthor().getProfileImage(),
                 (long) post.getAuthor().getPosts().size(),
                 (long) post.getAuthor().getFollowers().size(),
                 (long) post.getAuthor().getFollowing().size(),
                 isFollowing,
-                isLiked,
                 nationName,    // 🔥 추가
                 nationNameKo   // 🔥 추가
             );
@@ -254,13 +254,13 @@ public class PostService {
             String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
 
             var authorProfile = new PostAuthorProfileDto(
+                post.getAuthor().getId(),
                 post.getAuthor().getName(),
                 post.getAuthor().getProfileImage(),
                 (long) post.getAuthor().getPosts().size(),
                 (long) post.getAuthor().getFollowers().size(),
                 (long) post.getAuthor().getFollowing().size(),
                 isFollowing,
-                isLiked,
                 nationName,    // 🔥 추가
                 nationNameKo   // 🔥 추가
             );
@@ -289,13 +289,13 @@ public class PostService {
             String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
 
             var authorProfile = new PostAuthorProfileDto(
+                post.getAuthor().getId(),
                 post.getAuthor().getName(),
                 post.getAuthor().getProfileImage(),
                 (long) post.getAuthor().getPosts().size(),
                 (long) post.getAuthor().getFollowers().size(),
                 (long) post.getAuthor().getFollowing().size(),
                 isFollowing,
-                isLiked,
                 nationName,
                 nationNameKo
             );
@@ -347,13 +347,13 @@ public class PostService {
             String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
 
             var authorProfile = new PostAuthorProfileDto(
+                targetUser.getId(),
                 targetUser.getName(),
                 targetUser.getProfileImage(),
                 (long) targetUser.getPosts().size(),
                 (long) targetUser.getFollowers().size(),
                 (long) targetUser.getFollowing().size(),
                 isFollowing,
-                isLiked,
                 nationName,
                 nationNameKo
             );
