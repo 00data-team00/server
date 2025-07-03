@@ -9,6 +9,7 @@ import com._data._data.community.dto.PostListDto;
 import com._data._data.community.dto.PostWithAuthorProfileDto;
 import com._data._data.community.dto.PostWithAuthorProfileListDto;
 import com._data._data.community.service.PostService;
+import com._data._data.user.entity.Users;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -27,16 +28,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostController {
     private final PostService postService;
-    /**
-     * 🔥 새로 추가: 포스트 상세 조회 (댓글 포함)
-     */
     @Operation(
         summary = "포스트 상세 조회",
         description = "포스트 ID로 포스트 상세 정보와 댓글 목록을 조회합니다."
     )
     @GetMapping("/posts/{postId}/detail")
-    public ResponseEntity<PostDetailDto> getPostDetail(@PathVariable Long postId) {
-        PostDetailDto postDetail = postService.getPostDetail(postId);
+    public ResponseEntity<PostDetailDto> getPostDetail(
+        @PathVariable Long postId,
+        @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        Users currentUser = principal != null ? principal.getUser() : null;
+        PostDetailDto postDetail = postService.getPostDetail(postId, currentUser);
         return ResponseEntity.ok(postDetail);
     }
 
@@ -61,7 +63,8 @@ public class PostController {
     public PostListDto getMyPosts(
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        return toPostListDto(postService.getPostsByUser(principal.getUser()));
+        Users currentUser = principal.getUser();
+        return toPostListDto(postService.getPostsByUser(currentUser, currentUser));
     }
 
     @Operation(summary = "포스트에 댓글 작성", description = "지정된 포스트에 댓글을 작성합니다.")
