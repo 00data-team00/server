@@ -15,6 +15,7 @@ public record PostAuthorProfileDto(
 ) {
     public static ProfileDto from(Users user, boolean isFollowing, String nationName, String nationNameKo) {
         return new ProfileDto(
+            user.getId(),
             user.getName(),
             user.getProfileImage(),
             (long) user.getPosts().size(),

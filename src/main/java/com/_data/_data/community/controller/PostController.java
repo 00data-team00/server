@@ -131,6 +131,22 @@ public class PostController {
         return new ApiResponse(true, "포스트 삭제 성공");
     }
 
+    @Operation(
+        summary = "특정 유저의 포스트 조회",
+        description = "유저 ID로 해당 유저가 작성한 모든 포스트를 최신순으로 조회합니다."
+    )
+    @GetMapping("/users/{userId}/posts")
+    public PostWithAuthorProfileListDto getUserPosts(
+        @AuthenticationPrincipal CustomUserDetails principal,
+        @PathVariable Long userId
+    ) {
+        List<PostWithAuthorProfileDto> posts = postService.getUserPostsDetailed(
+            principal != null ? principal.getUser() : null,
+            userId
+        );
+        return toPostWithAuthorProfileListDto(posts);
+    }
+
     private PostListDto toPostListDto(List<PostDto> posts) {
         PostListDto postListDto = new PostListDto();
         postListDto.setPosts(posts);
@@ -142,4 +158,5 @@ public class PostController {
         dto.setPosts(list);
         return dto;
     }
+
 }

@@ -6,6 +6,7 @@ import com._data._data.user.entity.Users;
  * 프로필 조회 응답용 DTO
  */
 public record ProfileDto(
+    Long userId,
     String name,
     String profileImage,
     Long postCount,
@@ -17,6 +18,7 @@ public record ProfileDto(
 ) {
     public static ProfileDto from(Users user, boolean isFollowing, String nationName, String nationNameKo) {
         return new ProfileDto(
+            user.getId(),
             user.getName(),
             user.getProfileImage(),
             (long) user.getPosts().size(),
