@@ -8,6 +8,7 @@ public record CommentDto(
     Long postId,
     Long commenterId,
     String commenterName,
+    String commenterProfileImage,
     String content,
     LocalDateTime createdAt
 ) {
@@ -18,6 +19,7 @@ public record CommentDto(
             comment.getPost().getId(),
             comment.getCommenter().getId(),
             comment.getCommenter().getName(),
+            comment.getCommenter().getProfileImage(),
             comment.getContent(),
             comment.getCreatedAt()
         );
