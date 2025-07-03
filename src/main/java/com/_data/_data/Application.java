@@ -12,6 +12,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableJpaRepositories(basePackages = "com._data._data")
 public class Application {
 
+	@PostConstruct
+	public void started() {
+		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+	}
+
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
 	}
