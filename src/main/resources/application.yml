@@ -54,7 +54,7 @@ spring:
 
 app:
   upload:
-    dir: uploads
+    dir: /app/uploads
     base-url: /uploads
 
 #selenium:

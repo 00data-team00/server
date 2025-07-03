@@ -67,6 +67,12 @@ jobs:
           script: |
             cd /home/ec2-user
             
+            # 🔥 추가: 업로드 디렉토리 생성 (EC2 서버에)
+            mkdir -p /home/ec2-user/uploads/profile
+            mkdir -p /home/ec2-user/uploads/post
+            mkdir -p /home/ec2-user/uploads/eduinfo
+            chmod -R 755 /home/ec2-user/uploads
+            
             # docker-compose.yml 생성
             cat <<EOF > docker-compose.yml
             version: '3.8'
@@ -76,6 +82,9 @@ jobs:
                 container_name: spring-app
                 ports:
                   - "8080:8080"
+                volumes:
+                  # 🔥 추가: 볼륨 마운트 설정
+                  - /home/ec2-user/uploads:/app/uploads
                 environment:
                   - SPRING_PROFILES_ACTIVE=prod
                   - DEEPL_AUTH_KEY=${{ secrets.DEEPL_AUTH_KEY }}

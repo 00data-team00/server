@@ -15,15 +15,17 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 포스트 이미지
-        registry.addResourceHandler(baseUrl + "/post/**")
-            .addResourceLocations("file:" + uploadDir + "/post/");
-        // 프로필 이미지
-        registry.addResourceHandler(baseUrl + "/profile/**")
-            .addResourceLocations("file:" + uploadDir + "/profile/");
-
-        // eduinfo 이미지 추가
-        registry.addResourceHandler(baseUrl + "/eduinfo/**")
-            .addResourceLocations("file:" + uploadDir + "/eduinfo/");
+        registry.addResourceHandler(baseUrl + "/**")
+            .addResourceLocations("file:" + uploadDir + "/");
+//        // 포스트 이미지
+//        registry.addResourceHandler(baseUrl + "/post/**")
+//            .addResourceLocations("file:" + uploadDir + "/post/");
+//        // 프로필 이미지
+//        registry.addResourceHandler(baseUrl + "/profile/**")
+//            .addResourceLocations("file:" + uploadDir + "/profile/");
+//
+//        // eduinfo 이미지 추가
+//        registry.addResourceHandler(baseUrl + "/eduinfo/**")
+//            .addResourceLocations("file:" + uploadDir + "/eduinfo/");
     }
 }
