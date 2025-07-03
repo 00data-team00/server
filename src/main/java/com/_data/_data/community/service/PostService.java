@@ -291,5 +291,39 @@ public class PostService {
 
         return PostDetailDto.fromWithComments(post, commentDtos);
     }
+    /**
+     * 🔥 특정 유저의 포스트를 최신순으로 조회 (상세 정보 포함)
+     */
+    @Transactional(readOnly = true)
+    public List<PostWithAuthorProfileDto> getUserPostsDetailed(Users currentUser, Long targetUserId) {
+        Users targetUser = userRepository.findById(targetUserId)
+            .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다"));
 
+        // 해당 유저의 포스트를 최신순으로 조회
+        List<Post> posts = postRepository.findByAuthorOrderByCreatedAtDesc(targetUser);
+
+        return posts.stream().map(post -> {
+            PostDto dto = PostDto.from(post);
+            boolean isFollowing = followRepository.existsByFollowerAndFollowee(currentUser, targetUser);
+            boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+
+            // 🔥 국가 정보 추가
+            Nation nation = nationService.getNationById(targetUser.getNations());
+            String nationName = nation != null ? nation.getName() : "Unknown";
+            String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
+
+            var authorProfile = new PostAuthorProfileDto(
+                targetUser.getName(),
+                targetUser.getProfileImage(),
+                (long) targetUser.getPosts().size(),
+                (long) targetUser.getFollowers().size(),
+                (long) targetUser.getFollowing().size(),
+                isFollowing,
+                isLiked,
+                nationName,
+                nationNameKo
+            );
+            return new PostWithAuthorProfileDto(dto, authorProfile);
+        }).toList();
+    }
 }
