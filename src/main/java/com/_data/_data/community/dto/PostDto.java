@@ -11,7 +11,8 @@ public record PostDto(
     String imageUrl,
     Long likeCount,
     Long commentCount,
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    boolean isLiked
 ) {
     public static PostDto from(Post post) {
         return new PostDto(
@@ -22,7 +23,21 @@ public record PostDto(
             post.getImageUrl(),
             post.getLikeCount(),
             post.getCommentCount(),
-            post.getCreatedAt()
+            post.getCreatedAt(),
+            false
+        );
+    }
+    public static PostDto fromWithLiked(Post post, boolean isLiked) {
+        return new PostDto(
+            post.getId(),
+            post.getAuthor().getId(),
+            post.getAuthor().getName(),
+            post.getContent(),
+            post.getImageUrl(),
+            post.getLikeCount(),
+            post.getCommentCount(),
+            post.getCreatedAt(),
+            isLiked
         );
     }
 }

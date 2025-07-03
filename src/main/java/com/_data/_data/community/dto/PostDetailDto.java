@@ -17,9 +17,11 @@ public record PostDetailDto(
     Long likeCount,
     Long commentCount,
     LocalDateTime createdAt,
-    List<CommentDto> comments // 🔥 댓글 목록
+    List<CommentDto> comments, // 🔥 댓글 목록
+    boolean isLiked
+
 ) {
-    public static PostDetailDto fromWithComments(Post post, List<CommentDto> comments) {
+    public static PostDetailDto fromWithComments(Post post, List<CommentDto> comments, boolean isLiked) {
         return new PostDetailDto(
             post.getId(),
             post.getAuthor().getId(),
@@ -30,7 +32,11 @@ public record PostDetailDto(
             post.getLikeCount(),
             post.getCommentCount(),
             post.getCreatedAt(),
-            comments
+            comments,
+            isLiked
         );
+    }
+    public static PostDetailDto fromWithComments(Post post, List<CommentDto> comments) {
+        return fromWithComments(post, comments, false);
     }
 }

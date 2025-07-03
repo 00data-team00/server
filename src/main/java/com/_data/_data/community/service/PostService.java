@@ -77,16 +77,24 @@ public class PostService {
         postRepository.delete(post);
     }
 
-    public List<PostDto> getAllPosts() {
+    public List<PostDto> getAllPosts(Users currentUser) {
         return postRepository.findAllByOrderByCreatedAtDesc()
             .stream()
-            .map(PostDto::from)
+            .map(post -> {
+                boolean isLiked = currentUser != null &&
+                    likeRepository.existsByPostAndUser(post, currentUser);
+                return PostDto.fromWithLiked(post, isLiked);
+            })
             .toList();
     }
 
-    public List<PostDto> getPostsByUser(Users user) {
-        return postRepository.findByAuthor(user).stream()
-            .map(PostDto::from)
+    public List<PostDto> getPostsByUser(Users user, Users currentUser) {
+        return postRepository.findByAuthorOrderByCreatedAtDesc(user).stream()
+            .map(post -> {
+                boolean isLiked = currentUser != null &&
+                    likeRepository.existsByPostAndUser(post, currentUser);
+                return PostDto.fromWithLiked(post, isLiked);
+            })
             .toList();
     }
 
@@ -146,13 +154,24 @@ public class PostService {
             return List.of();
         }
         return postRepository.findByAuthorInOrderByCreatedAtDesc(followees)
-            .stream().map(PostDto::from).toList();
+            .stream()
+            .map(post -> {
+                boolean isLiked = likeRepository.existsByPostAndUser(post, user);
+                return PostDto.fromWithLiked(post, isLiked);
+            })
+            .toList();
     }
 
     public List<PostDto> getNationTimeline(Users user) {
         return postRepository.findByAuthor_NationsOrderByCreatedAtDesc(user.getNations())
-            .stream().map(PostDto::from).toList();
+            .stream()
+            .map(post -> {
+                boolean isLiked = likeRepository.existsByPostAndUser(post, user);
+                return PostDto.fromWithLiked(post, isLiked);
+            })
+            .toList();
     }
+
 
     // 🔹 유저 ID를 통해 프로필 조회 (다른 유저의 프로필을 조회할 때 사용)
     public ProfileDto getProfile(Users currentUser, Long targetUserId) {
@@ -253,8 +272,11 @@ public class PostService {
 
         return posts.stream().map(post -> {
             PostDto dto = PostDto.from(post);
-            boolean isFollowing = followRepository.existsByFollowerAndFollowee(currentUser, post.getAuthor());
-            boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+            boolean isFollowing = currentUser != null &&
+                followRepository.existsByFollowerAndFollowee(currentUser, post.getAuthor());
+            boolean isLiked = currentUser != null &&
+                likeRepository.existsByPostAndUser(post, currentUser);
+
             // 🔥 국가 정보 추가
             Nation nation = nationService.getNationById(post.getAuthor().getNations());
             String nationName = nation != null ? nation.getName() : "Unknown";
@@ -268,8 +290,8 @@ public class PostService {
                 (long) post.getAuthor().getFollowing().size(),
                 isFollowing,
                 isLiked,
-                nationName,    // 🔥 추가
-                nationNameKo   // 🔥 추가
+                nationName,
+                nationNameKo
             );
             return new PostWithAuthorProfileDto(dto, authorProfile);
         }).toList();
@@ -279,7 +301,7 @@ public class PostService {
      * 🔥 새로 추가: 포스트 상세 조회 (댓글 포함)
      */
     @Transactional(readOnly = true)
-    public PostDetailDto getPostDetail(Long postId) {
+    public PostDetailDto getPostDetail(Long postId, Users currentUser) {
         Post post = postRepository.findById(postId)
             .orElseThrow(() -> new EntityNotFoundException("포스트를 찾을 수 없습니다."));
 
@@ -289,8 +311,11 @@ public class PostService {
             .map(CommentDto::from)
             .toList();
 
-        return PostDetailDto.fromWithComments(post, commentDtos);
-    }
+        // 현재 유저가 이 포스트에 좋아요를 눌렀는지 확인
+        boolean isLiked = currentUser != null &&
+            likeRepository.existsByPostAndUser(post, currentUser);
+
+        return PostDetailDto.fromWithComments(post, commentDtos, isLiked);    }
     /**
      * 🔥 특정 유저의 포스트를 최신순으로 조회 (상세 정보 포함)
      */
@@ -304,8 +329,10 @@ public class PostService {
 
         return posts.stream().map(post -> {
             PostDto dto = PostDto.from(post);
-            boolean isFollowing = followRepository.existsByFollowerAndFollowee(currentUser, targetUser);
-            boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+            boolean isFollowing = currentUser != null &&
+                followRepository.existsByFollowerAndFollowee(currentUser, targetUser);
+            boolean isLiked = currentUser != null &&
+                likeRepository.existsByPostAndUser(post, currentUser);
 
             // 🔥 국가 정보 추가
             Nation nation = nationService.getNationById(targetUser.getNations());
