@@ -28,7 +28,8 @@ public class ProfileController {
     private final ProfileService profileService;
 
     @Operation(summary = "타 유저 프로필 조회",
-        description = "인증된 사용자가 다른 사용자의 프로필 정보를 조회합니다.")    @GetMapping("/api/users/{userId}/profile")
+        description = "인증된 사용자가 다른 사용자의 프로필 정보를 조회합니다.")
+    @GetMapping("/api/users/{userId}/profile")
     public ProfileDto getUserProfile(
         @AuthenticationPrincipal CustomUserDetails principal,
         @PathVariable Long userId
