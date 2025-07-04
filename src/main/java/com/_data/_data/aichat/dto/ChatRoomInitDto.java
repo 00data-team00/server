@@ -17,5 +17,7 @@ public class ChatRoomInitDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
+    private Long messageId;
+
     private String message;
 }
