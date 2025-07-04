@@ -84,5 +84,63 @@ public class FollowService {
             })
             .toList();
     }
+// FollowService에 추가할 메서드들
 
+    /**
+     * 🔥 특정 유저가 팔로잉 중인 유저 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<FollowDto> getFollowing(Users currentUser, Long targetUserId) {
+        Users targetUser = usersRepository.findById(targetUserId)
+            .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
+
+        // 현재 로그인한 유저가 팔로우하고 있는 유저들의 ID 집합
+        Set<Long> currentUserFollowingIds = currentUser != null ?
+            followRepository.findByFollower(currentUser).stream()
+                .map(f -> f.getFollowee().getId())
+                .collect(Collectors.toSet()) : Set.of();
+
+        return followRepository.findByFollower(targetUser).stream()
+            .map(f -> {
+                Users u = f.getFollowee();
+                // 현재 로그인한 유저가 이 유저를 팔로우하고 있는지 확인
+                boolean isFollowingByCurrentUser = currentUserFollowingIds.contains(u.getId());
+                return new FollowDto(
+                    u.getId(),
+                    u.getName(),
+                    u.getProfileImage(),
+                    isFollowingByCurrentUser
+                );
+            })
+            .toList();
+    }
+
+    /**
+     * 🔥 특정 유저를 팔로우하는 유저 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<FollowDto> getFollowers(Users currentUser, Long targetUserId) {
+        Users targetUser = usersRepository.findById(targetUserId)
+            .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
+
+        // 현재 로그인한 유저가 팔로우하고 있는 유저들의 ID 집합
+        Set<Long> currentUserFollowingIds = currentUser != null ?
+            followRepository.findByFollower(currentUser).stream()
+                .map(f -> f.getFollowee().getId())
+                .collect(Collectors.toSet()) : Set.of();
+
+        return followRepository.findByFollowee(targetUser).stream()
+            .map(f -> {
+                Users u = f.getFollower();
+                // 현재 로그인한 유저가 이 유저를 팔로우하고 있는지 확인
+                boolean isFollowingByCurrentUser = currentUserFollowingIds.contains(u.getId());
+                return new FollowDto(
+                    u.getId(),
+                    u.getName(),
+                    u.getProfileImage(),
+                    isFollowingByCurrentUser
+                );
+            })
+            .toList();
+    }
 }
