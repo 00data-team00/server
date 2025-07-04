@@ -20,14 +20,19 @@ public class UserGameInfo {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
+    @Builder.Default
     private Long totalQuizzesSolved   = 0L;
 
+    @Builder.Default
     private Long quizzesSolvedToday   = 0L;
 
+    @Builder.Default
     private Long chatRoomsCreated     = 0L;
 
+    @Builder.Default
     private Long levelCompleted = 0L;
 
+    @Builder.Default
     private Long currentCountInLevel = 0L;
 
     // 추후 추가 정보
