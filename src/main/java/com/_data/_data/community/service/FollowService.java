@@ -29,8 +29,9 @@ public class FollowService {
             .orElseThrow(() -> new EntityNotFoundException("사용자 없음"));
 
         boolean exists = followRepository.existsByFollowerAndFollowee(currentUser, target);
-        if (exists) {
-            throw new IllegalStateException("이미 팔로우 중인 유저입니다.");
+        // 🔥 이미 존재하면 그냥 무시
+        if (followRepository.existsByFollowerAndFollowee(currentUser, target)) {
+            return;  // 에러 던지지 않고 그냥 리턴
         }
 
         Follow f = Follow.builder()
