@@ -85,7 +85,7 @@ public class UserService {
             .nations(req.nations())
             .password(hashed)
             .translationLang("ko")
-            .profileImage(DEFAULT_PROFILE_IMAGE)
+            .profileImage(null)
             .build();
 
         // 🔥 먼저 Users 저장
