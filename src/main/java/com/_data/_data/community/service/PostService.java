@@ -180,11 +180,11 @@ public class PostService {
         return getProfile(currentUser, targetUser);
     }
 
-    // 🔹 유저 객체로 바로 프로필 조회 (자기 자신 or 이미 조회한 유저가 있을 때 사용)
     public ProfileDto getProfile(Users currentUser, Users targetUser) {
-        boolean isFollowing = !currentUser.equals(targetUser)
-            && targetUser.getFollowers().stream()
-            .anyMatch(f -> f.getFollower().equals(currentUser));
+        // 🔥 null 체크 추가
+        boolean isFollowing = currentUser != null
+            && !currentUser.equals(targetUser)
+            && followRepository.existsByFollowerAndFollowee(currentUser, targetUser);
 
         Nation nation = nationService.getNationById(targetUser.getNations());
         String nationName = nation != null ? nation.getName() : "Unknown";
