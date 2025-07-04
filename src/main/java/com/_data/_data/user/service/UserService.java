@@ -88,13 +88,17 @@ public class UserService {
             .profileImage(DEFAULT_PROFILE_IMAGE)
             .build();
 
+        // 🔥 먼저 Users 저장
+        Users savedUser = userRepository.save(user);
+
+        // 🔥 그 다음 UserGameInfo 저장 (저장된 Users 사용)
         UserGameInfo userGameInfo = UserGameInfo.builder()
-                .user(user)
-                .build();
+            .user(savedUser)  // 이미 저장된 Users 사용
+            .build();
 
         userGameInfoRepository.save(userGameInfo);
 
-        return userRepository.save(user);
+        return savedUser;
     }
 
     @Transactional
