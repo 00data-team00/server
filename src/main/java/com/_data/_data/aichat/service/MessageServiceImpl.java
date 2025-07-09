@@ -9,11 +9,17 @@ import com._data._data.aichat.exception.TopicNotFoundException;
 import com._data._data.aichat.repository.ChatRoomRepository;
 import com._data._data.aichat.repository.MessageRepository;
 import com._data._data.aichat.repository.TopicRepository;
+import com._data._data.auth.entity.CustomUserDetails;
+import com._data._data.game.repository.UserGameInfoRepository;
+import com._data._data.user.entity.Users;
+import com._data._data.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,6 +33,8 @@ public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final TopicRepository topicRepository;
+    private final UserRepository userRepository;
+    private final UserGameInfoRepository userGameInfoRepository;
 
     private final ChatClient chatClient;
 
@@ -34,11 +42,15 @@ public class MessageServiceImpl implements MessageService {
             MessageRepository messageRepository,
             ChatRoomRepository chatRoomRepository,
             TopicRepository topicRepository,
+            UserRepository userRepository,
+            UserGameInfoRepository userGameInfoRepository,
             ChatClient.Builder chatClientBuilder)
     {
         this.messageRepository = messageRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.topicRepository = topicRepository;
+        this.userRepository = userRepository;
+        this.userGameInfoRepository = userGameInfoRepository;
         this.chatClient = chatClientBuilder.build();
     }
 
@@ -50,6 +62,17 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public Message receiveMessage(MessageReceiveDto messageReceiveDto) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Users user = userRepository.findByEmailAndIsDeletedFalse(userDetails.getUsername());
+
+        Long userId = user.getId();
+
+        if (messageRepository.findByChatRoomIdOrderByStoredAt(messageReceiveDto.getChatRoomId()).size() == 1) {
+            userGameInfoRepository.incrementChatRoomsCreated(userId);
+        }
+
         Message message = Message.builder()
                 .chatRoomId(messageReceiveDto.getChatRoomId())
                 .text(messageReceiveDto.getText())

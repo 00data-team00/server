@@ -44,8 +44,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .isFinished(false)
                 .build();
 
-        userGameInfoRepository.incrementChatRoomsCreated(user.getId());
-
         return chatRoomRepository.save(chatRoom);
     }
 
