@@ -21,7 +21,7 @@ public class ProfileService {
             String oldFileName = extractFileNameFromUrl(user.getProfileImage());
             firebaseFileService.delete(oldFileName);
         }
-        String url = "/uploads" + firebaseFileService.store(image, "profile", user.getId(), user.getId());
+        String url = firebaseFileService.store(image, "profile", user.getId(), user.getId());
         user.setProfileImage(url);
         userRepository.save(user);
         return url;
