@@ -1,3 +1,7 @@
+firebase:
+  storage:
+    bucket: data-4c0c3.firebasestorage.app
+
 spring:
   application:
     name: 00data
@@ -9,6 +13,10 @@ spring:
     hikari:
       connection-init-sql: SET NAMES utf8mb4
 
+  servlet:
+    multipart:
+      max-file-size: 10MB      # 개별 파일 최대 크기
+      max-request-size: 10MB   # 전체 요청 최대 크기
 
   sql:
     init:

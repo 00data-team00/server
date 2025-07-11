@@ -34,9 +34,9 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
     private final UserRepository userRepository;
-    private final FileService fileService;
     private final FollowRepository followRepository;
-    private final NationService nationService; // 🔥 추가
+    private final NationService nationService;
+    private final FirebaseFileService firebaseFileService;
 
     @Transactional
     public PostDto createPost(Users user, String content, MultipartFile image) throws IOException {
@@ -50,8 +50,8 @@ public class PostService {
         Post saved = postRepository.save(post);
 
         if (image != null && !image.isEmpty()) {
-            String imageUrl = fileService.store(image, "post", user.getId(), saved.getId());
-            saved.setImageUrl("/uploads" + imageUrl);
+            String imageUrl = firebaseFileService.store(image, "post", user.getId(), saved.getId());
+            saved.setImageUrl(imageUrl);
             postRepository.save(saved);
         }
         return PostDto.from(saved);
@@ -64,15 +64,17 @@ public class PostService {
 
         if (!post.getAuthor().equals(user)) {
             throw new IllegalStateException("본인이 작성한 포스트만 삭제할 수 있습니다.");
-        }
 
+        }
 
         commentRepository.deleteByPost(post);
         likeRepository.deleteByPost(post);
 
-        // 이미지가 있으면 파일 삭제 (선택 사항)
+        // Firebase Storage에서 이미지 삭제
         if (post.getImageUrl() != null) {
-            fileService.delete(post.getImageUrl().replace("/uploads", ""));
+            // URL에서 파일 경로 추출 (Firebase Storage 경로 추출 로직 필요)
+            String fileName = extractFileNameFromUrl(post.getImageUrl());
+            firebaseFileService.delete(fileName);
         }
         postRepository.delete(post);
     }
@@ -86,6 +88,29 @@ public class PostService {
                 return PostDto.fromWithLiked(post, isLiked);
             })
             .toList();
+    }
+
+    /**
+     * Firebase Storage URL에서 파일 경로 추출
+     * 예: https://storage.googleapis.com/bucket/post/filename.jpg -> post/filename.jpg
+     */
+    private String extractFileNameFromUrl(String url) {
+        if (url == null || url.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // Firebase Storage URL 패턴에서 파일 경로 추출
+            String[] parts = url.split("/");
+            if (parts.length >= 2) {
+                // 마지막 두 부분을 합쳐서 "post/filename.jpg" 형태로 만들기
+                return parts[parts.length - 2] + "/" + parts[parts.length - 1].split("\\?")[0];
+            }
+        } catch (Exception e) {
+            System.err.println("URL에서 파일명 추출 실패: " + e.getMessage());
+        }
+
+        return null;
     }
 
     public List<PostDto> getPostsByUser(Users user, Users currentUser) {
