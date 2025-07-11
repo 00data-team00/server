@@ -39,7 +39,7 @@ out/
 /.nb-gradle/
 
 ### Firebase ###
-serviceAccountKey.json
+src/main/resources/firebase-service-account.json
 
 ### VS Code ###
 .vscode/
