@@ -80,9 +80,6 @@ jobs:
                 container_name: spring-app
                 ports:
                   - "8080:8080"
-                volumes:
-                  # 🔥 추가: 볼륨 마운트 설정
-                  - /home/ec2-user/uploads:/app/uploads
                 environment:
                   - SPRING_PROFILES_ACTIVE=prod
                   - DEEPL_AUTH_KEY=${{ secrets.DEEPL_AUTH_KEY }}
