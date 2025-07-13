@@ -2,8 +2,12 @@ package com._data._data.auth.controller;
 
 import com._data._data.auth.dto.LoginRequest;
 import com._data._data.auth.dto.LoginResponse;
+import com._data._data.auth.dto.RefreshRequest;
 import com._data._data.auth.exception.EmailNotFoundException;
 import com._data._data.auth.exception.InvalidPasswordException;
+import com._data._data.auth.exception.TokenExpiredException;
+import com._data._data.auth.exception.TokenNotFoundException;
+import com._data._data.auth.jwt.RefreshTokenService;
 import com._data._data.auth.service.AuthServiceImpl;
 import com._data._data.common.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthServiceImpl authServiceImpl;
+    private final RefreshTokenService refreshTokenService;
 
     @Operation(
         summary = "로그인",
@@ -51,5 +56,26 @@ public class AuthController {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse(false, ex.getMessage()));
         }
+    }
+
+
+    @PostMapping("/refresh")
+    @Operation(summary = "토큰 갱신", description = "Refresh Token으로 새로운 Access Token을 발급받습니다.")
+    public ResponseEntity<?> refresh(@Valid @RequestBody RefreshRequest request) {
+        try {
+            LoginResponse tokens = refreshTokenService.refreshAccessToken(request.refreshToken());
+            return ResponseEntity.ok(tokens);
+        } catch (TokenNotFoundException | TokenExpiredException ex) {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiResponse(false, ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "로그아웃", description = "Refresh Token을 무효화합니다.")
+    public ResponseEntity<?> logout(@Valid @RequestBody RefreshRequest request) {
+        refreshTokenService.logout(request.refreshToken());
+        return ResponseEntity.ok(new ApiResponse(true, "로그아웃되었습니다."));
     }
 }
