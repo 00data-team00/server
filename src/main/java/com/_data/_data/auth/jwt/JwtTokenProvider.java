@@ -1,6 +1,8 @@
 package com._data._data.auth.jwt;
 
 import com._data._data.auth.dto.LoginResponse;
+import com._data._data.auth.entity.RefreshToken;
+import com._data._data.auth.repository.RefreshTokenRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -11,8 +13,10 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -23,17 +27,19 @@ public class JwtTokenProvider {
     private final Key key;
     private final long accessTokenExpMillis;
     private final long refreshTokenExpMillis;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public JwtTokenProvider(
         @Value("${jwt.secret}") String secretKey,
         @Value("${jwt.expiration_time}") long accessTokenExpMillis,
-        @Value("${jwt.refresh_token_expiration_time}") long refreshTokenExpMillis
-
+        @Value("${jwt.refresh_token_expiration_time}") long refreshTokenExpMillis,
+        RefreshTokenRepository refreshTokenRepository
     ) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.accessTokenExpMillis = accessTokenExpMillis;
         this.refreshTokenExpMillis = refreshTokenExpMillis;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     public String createAccessToken(Long userId, String email) {
@@ -61,15 +67,44 @@ public class JwtTokenProvider {
     }
 
     public LoginResponse generateTokenDto(Long userId, String email) {
-        String accessToken  = createAccessToken(userId, email);
-        String refreshToken = createRefreshToken(userId, email);
-        return new LoginResponse(accessToken, refreshToken);
+        String accessToken = createAccessToken(userId, email);
+        String refreshToken = generateAndSaveRefreshToken(userId);
+
+        return new LoginResponse(
+            accessToken,
+            refreshToken,
+            "Bearer",
+            accessTokenExpMillis / 1000
+        );
+    }
+
+    private String generateAndSaveRefreshToken(Long userId) {
+        // 기존 Refresh Token 삭제
+        refreshTokenRepository.deleteByUserId(userId);
+
+        // 새 Refresh Token 생성
+        String tokenValue = UUID.randomUUID().toString();
+        LocalDateTime expiryDate = LocalDateTime.now()
+            .plusSeconds(refreshTokenExpMillis / 1000);
+
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken(tokenValue);
+        refreshToken.setUserId(userId);
+        refreshToken.setExpiryDate(expiryDate);
+        refreshToken.setCreatedDate(LocalDateTime.now());
+
+        refreshTokenRepository.save(refreshToken);
+
+        return tokenValue;
     }
 
     public Long getUserId(String token) {
         return parseClaims(token).get("userId", Long.class);
     }
 
+    public String getEmail(String token) {
+        return parseClaims(token).get("email", String.class);
+    }
 
     public Claims parseClaims(String accessToken) {
         try {
@@ -93,5 +128,11 @@ public class JwtTokenProvider {
             log.info("JWT claims string is empty.", e);
         }
         return false;
+    }
+
+    public boolean validateRefreshToken(String refreshToken) {
+        return refreshTokenRepository.findByToken(refreshToken)
+            .map(token -> !token.isExpired())
+            .orElse(false);
     }
 }
