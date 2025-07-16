@@ -8,6 +8,13 @@ spring:
   profiles:
     include: secret
 
+  # Thymeleaf 설정 (HTML 템플릿용)
+  thymeleaf:
+    cache: false # 개발환경에서는 false, 운영환경에서는 true
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
@@ -65,8 +72,6 @@ app:
     dir: /app/uploads
     base-url: /uploads
 
-#selenium:
-#  url: http://selenium:4444
 
 logging:
   level:
