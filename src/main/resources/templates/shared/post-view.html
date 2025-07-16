@@ -90,7 +90,7 @@
     <h3>🚀 더 많은 기능을 위해 앱을 설치하세요!</h3>
     <p>댓글 작성, 좋아요, 팔로우 등 모든 기능을 이용해보세요</p>
 
-    <button onclick="openInApp()" class="open-app-btn">📱 앱에서 열기</button>
+    <a href="#" onclick="return openInApp(event)" class="open-app-btn">📱 앱에서 열기</a>
     <a th:href="'https://play.google.com/store/apps/details?id=' + ${androidPackageName}"
        id="playStoreLink"
        class="download-btn">🤖 Android 앱 다운로드</a>
@@ -98,7 +98,10 @@
 </div>
 
 <script th:inline="javascript">
-  function openInApp() {
+  function openInApp(event) {
+      // 기본 링크 동작 방지
+      event.preventDefault();
+
       const postId = /*[[${post.id}]]*/ null;
       const packageName = /*[[${androidPackageName}]]*/ 'com.data.app';
       const baseUrl = /*[[${baseUrl}]]*/ 'https://barum.p-e.kr';
@@ -110,7 +113,7 @@
       if (!postId) {
           console.error('게시물 ID가 없습니다');
           alert('게시물 정보를 찾을 수 없습니다.');
-          return;
+          return false;
       }
 
       // 현재 URL에서 토큰 추출 (URL이 /shared/post/TOKEN 형태)
@@ -127,9 +130,16 @@
 
       if (isAndroid) {
           // Android의 경우 App Links 사용
-          // App Links가 설정되어 있으면 앱이 자동으로 열림
+          // href 속성을 동적으로 설정하고 클릭 이벤트 발생
           console.log('Android App Links 실행:', appLinkUrl);
-          window.location.href = appLinkUrl;
+
+          // 임시 링크 생성하여 클릭
+          const tempLink = document.createElement('a');
+          tempLink.href = appLinkUrl;
+          tempLink.style.display = 'none';
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          document.body.removeChild(tempLink);
 
           // 1.5초 후 페이지가 그대로 있으면 Play Store로 이동
           setTimeout(function() {
@@ -142,7 +152,14 @@
       } else if (isIOS) {
           // iOS의 경우 Universal Links 사용
           console.log('iOS Universal Links 실행:', appLinkUrl);
-          window.location.href = appLinkUrl;
+
+          // 임시 링크 생성하여 클릭
+          const tempLink = document.createElement('a');
+          tempLink.href = appLinkUrl;
+          tempLink.style.display = 'none';
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          document.body.removeChild(tempLink);
 
           // iOS도 유사하게 처리
           setTimeout(function() {
@@ -158,6 +175,8 @@
           console.log('데스크톱에서는 현재 페이지 유지');
           alert('모바일 앱에서 더 많은 기능을 이용하실 수 있습니다.');
       }
+
+      return false;
   }
 
   // 페이지 가시성 변화 감지 (앱으로 전환되었는지 확인용)

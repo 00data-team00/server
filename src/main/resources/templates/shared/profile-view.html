@@ -130,7 +130,7 @@
     <h3>🤝 앱에서 팔로우하고 더 많은 콘텐츠를 확인하세요!</h3>
     <p>이 사용자의 최신 게시물과 활동을 놓치지 마세요</p>
 
-    <button onclick="openInApp()" class="open-app-btn">📱 앱에서 열기</button>
+    <a href="#" onclick="return openInApp(event)" class="open-app-btn">📱 앱에서 열기</a>
     <a th:href="'https://play.google.com/store/apps/details?id=' + ${androidPackageName}"
        id="playStoreLink"
        class="download-btn">🤖 Android 앱 다운로드</a>
@@ -138,7 +138,10 @@
 </div>
 
 <script th:inline="javascript">
-  function openInApp() {
+  function openInApp(event) {
+      // 기본 링크 동작 방지
+      event.preventDefault();
+
       const userId = /*[[${profile.userId}]]*/ '123';
       const packageName = /*[[${androidPackageName}]]*/ 'com.yourapp.package';
       const baseUrl = /*[[${baseUrl}]]*/ 'https://barum.p-e.kr';
@@ -161,7 +164,14 @@
       if (isAndroid) {
           // Android의 경우 App Links 사용
           console.log('Android App Links 실행:', appLinkUrl);
-          window.location.href = appLinkUrl;
+
+          // 임시 링크 생성하여 클릭
+          const tempLink = document.createElement('a');
+          tempLink.href = appLinkUrl;
+          tempLink.style.display = 'none';
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          document.body.removeChild(tempLink);
 
           // 1.5초 후 페이지가 그대로 있으면 Play Store로 이동
           setTimeout(function() {
@@ -174,7 +184,14 @@
       } else if (isIOS) {
           // iOS의 경우 Universal Links 사용
           console.log('iOS Universal Links 실행:', appLinkUrl);
-          window.location.href = appLinkUrl;
+
+          // 임시 링크 생성하여 클릭
+          const tempLink = document.createElement('a');
+          tempLink.href = appLinkUrl;
+          tempLink.style.display = 'none';
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          document.body.removeChild(tempLink);
 
           // iOS도 유사하게 처리
           setTimeout(function() {
@@ -188,6 +205,8 @@
           console.log('데스크톱에서는 현재 페이지 유지');
           alert('모바일 앱에서 더 많은 기능을 이용하실 수 있습니다.');
       }
+
+      return false;
   }
 
   // 페이지 가시성 변화 감지 (앱으로 전환되었는지 확인용)
