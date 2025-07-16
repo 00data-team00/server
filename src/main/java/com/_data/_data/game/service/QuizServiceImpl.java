@@ -21,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -114,6 +115,12 @@ public class QuizServiceImpl implements QuizService {
         userGameInfoRepository.incrementTotalQuizzesSolved(user.getId());
 
         userGameInfoRepository.incrementCurrentCountInLevel(user.getId());
+
+        // 현재 요일 확인 (월요일=1, 일요일=7)
+        int currentDayOfWeek = LocalDate.now().getDayOfWeek().getValue();
+
+        // 주간 퀴즈 풀이 여부 업데이트
+        userGameInfoRepository.updateWeeklyQuizStatus(user.getId(), currentDayOfWeek);
 
         Long currentCountInLevel = userGameInfoRepository.getCurrentCountInLevelByUserId(user.getId());
         Long countByLevel = quizRepository.countByLevel(quiz.getLevel());
