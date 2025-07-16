@@ -2,6 +2,7 @@ package com._data._data.community.controller;
 import com._data._data.community.dto.PostDetailDto;
 import com._data._data.community.dto.ProfileDto;
 import com._data._data.community.dto.ShareResponse;
+import com._data._data.community.dto.TokenInfoDto;
 import com._data._data.community.entity.ShareToken;
 import com._data._data.community.service.PostService;
 import com._data._data.community.service.ShareService;
@@ -195,21 +196,21 @@ public class ShareController {
 
     // 6. GET /api/share/token/{token} - 앱에서 토큰으로 실제 ID 조회용 (필요시)
     @Operation(
-        summary = "토큰으로 콘텐츠 ID 조회",
-        description = "공유 토큰을 통해 실제 게시물 또는 프로필 ID를 조회합니다. " +
+        summary = "토큰으로 콘텐츠 정보 조회",
+        description = "공유 토큰을 통해 실제 게시물 또는 프로필 ID와 타입을 조회합니다. " +
             "앱에서 딥링크 처리 시 사용됩니다.",
         responses = {
             @ApiResponse(
                 responseCode = "200",
-                description = "콘텐츠 ID 반환",
-                content = @Content(schema = @Schema(implementation = Long.class))
+                description = "콘텐츠 정보 반환",
+                content = @Content(schema = @Schema(implementation = TokenInfoDto.class))
             ),
             @ApiResponse(responseCode = "404", description = "토큰이 유효하지 않거나 만료됨")
         }
     )
     @GetMapping("/api/share/token/{token}")
     @ResponseBody
-    public ResponseEntity<Long> getContentIdByToken(
+    public ResponseEntity<TokenInfoDto> getContentIdByToken(
         @Parameter(description = "공유 토큰", required = true)
         @PathVariable String token) {
         ShareToken shareToken = shareService.validateToken(token, "POST");
@@ -221,6 +222,7 @@ public class ShareController {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(shareToken.getContentId());
+        TokenInfoDto tokenInfo = new TokenInfoDto(shareToken.getContentId(), shareToken.getContentType());
+        return ResponseEntity.ok(tokenInfo);
     }
 }
