@@ -1,0 +1,165 @@
+<!-- 📍 위치: src/main/resources/templates/shared/profile-view.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${profile.name + '님의 프로필'}">프로필</title>
+
+  <!-- 소셜미디어 미리보기 메타태그 -->
+  <meta property="og:title" th:content="${profile.name + '님의 프로필'}">
+  <meta property="og:description" th:content="${profile.name + '님을 팔로우해보세요!'}">
+  <meta property="og:image" th:content="${profile.profileImage}">
+  <meta property="og:url" th:content="${baseUrl + '/shared/profile/' + profile.userId}">
+  <meta property="og:type" content="profile">
+
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+    }
+    .profile-container {
+        max-width: 400px;
+        margin: 0 auto;
+        text-align: center;
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .profile-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #667eea;
+        margin-bottom: 20px;
+    }
+    .profile-name {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 15px 0 5px 0;
+        color: #333;
+    }
+    .profile-nation {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 25px;
+    }
+    .stats {
+        display: flex;
+        justify-content: space-around;
+        margin: 25px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    .stat {
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 20px;
+        font-weight: bold;
+        color: #667eea;
+        display: block;
+    }
+    .stat-label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+    .app-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-top: 25px;
+    }
+    .download-btn, .open-app-btn {
+        display: inline-block;
+        margin: 8px;
+        padding: 12px 24px;
+        background: rgba(255,255,255,0.2);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        border: 2px solid rgba(255,255,255,0.3);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .download-btn:hover, .open-app-btn:hover {
+        background: rgba(255,255,255,0.3);
+        transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+<div class="profile-container">
+  <img th:if="${profile.profileImage}"
+       th:src="${profile.profileImage}"
+       alt="프로필 이미지"
+       class="profile-image">
+  <div th:unless="${profile.profileImage}"
+       style="width: 120px; height: 120px; border-radius: 50%; background: #ddd; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 48px;">
+    👤
+  </div>
+
+  <h1 class="profile-name" th:text="${profile.name}">사용자명</h1>
+  <p class="profile-nation" th:text="'🌍 ' + ${profile.nationNameKo}">국가</p>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-number" th:text="${profile.postCount}">0</span>
+      <div class="stat-label">게시물</div>
+    </div>
+    <div class="stat">
+      <span class="stat-number" th:text="${profile.followerCount}">0</span>
+      <div class="stat-label">팔로워</div>
+    </div>
+    <div class="stat">
+      <span class="stat-number" th:text="${profile.followingCount}">0</span>
+      <div class="stat-label">팔로잉</div>
+    </div>
+  </div>
+
+  <div class="app-banner">
+    <h3>🤝 앱에서 팔로우하고 더 많은 콘텐츠를 확인하세요!</h3>
+    <p>이 사용자의 최신 게시물과 활동을 놓치지 마세요</p>
+    <button onclick="openInApp()" class="open-app-btn">📱 앱에서 열기</button>
+    <a th:href="'https://play.google.com/store/apps/details?id=' + ${androidPackageName}" class="download-btn">🤖 Android 앱 다운로드</a>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  function openInApp() {
+      const userId = /*[[${profile.userId}]]*/ '123';
+      const packageName = /*[[${androidPackageName}]]*/ 'com.yourapp.package';
+
+      // 1. 커스텀 스킴으로 앱 실행 시도 (fallback)
+      const customScheme = `yourapp://profile/${userId}`;
+
+      try {
+          // Android에서 Intent 스킴 시도
+          if (navigator.userAgent.includes('Android')) {
+              window.location.href = `intent://profile/${userId}#Intent;scheme=yourapp;package=${packageName};end`;
+          } else {
+              // iOS에서 커스텀 스킴 시도
+              window.location.href = customScheme;
+          }
+
+          // 2초 후에도 페이지가 그대로면 앱이 없는 것으로 판단
+          setTimeout(function() {
+              if (navigator.userAgent.includes('Android')) {
+                  window.location.href = `https://play.google.com/store/apps/details?id=${packageName}`;
+              } else if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+                  window.location.href = 'https://apps.apple.com/app/your-app-id';
+              }
+          }, 2000);
+      } catch (e) {
+          console.log('앱 실행 실패:', e);
+      }
+  }
+</script>
+</body>
+</html>

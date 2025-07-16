@@ -6,6 +6,8 @@ public class SecurityConstant {
         "/api/login",
         "/v3/api-docs/**",
         "/swagger-ui.html",
-        "/swagger-ui/**"
+        "/swagger-ui/**",
+        "/shared/**",
+        "/.well-known/**"
     };
 }
