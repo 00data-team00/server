@@ -1,0 +1,125 @@
+<!-- 📍 위치: src/main/resources/templates/shared/post-view.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${post.content}">게시물</title>
+
+  <!-- 소셜미디어 미리보기 메타태그 -->
+  <meta property="og:title" th:content="${post.content}">
+  <meta property="og:description" th:content="${post.content}">
+  <meta property="og:image" th:content="${post.imageUrl}">
+  <meta property="og:url" th:content="${baseUrl + '/shared/post/' + post.id}">
+  <meta property="og:type" content="article">
+
+  <!-- 앱 설치 유도 메타태그 -->
+  <meta name="apple-itunes-app" content="app-id=YOUR_APP_ID">
+  <meta name="google-play-app" th:content="'app-id=' + ${androidPackageName}">
+
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+    }
+    .post-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .post-image {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+    .app-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-top: 30px;
+        text-align: center;
+    }
+    .download-btn, .open-app-btn {
+        display: inline-block;
+        margin: 8px;
+        padding: 12px 24px;
+        background: rgba(255,255,255,0.2);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        border: 2px solid rgba(255,255,255,0.3);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .download-btn:hover, .open-app-btn:hover {
+        background: rgba(255,255,255,0.3);
+        transform: translateY(-2px);
+    }
+    .post-meta {
+        color: #666;
+        font-size: 14px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+<div class="post-container">
+  <h1>📝 게시물</h1>
+  <p th:text="${post.content}">게시물 내용</p>
+  <img th:if="${post.imageUrl}" th:src="${post.imageUrl}" alt="게시물 이미지" class="post-image">
+
+  <div class="post-meta">
+    <p>✍️ 작성자: <span th:text="${post.authorName}">작성자명</span></p>
+    <p>📅 작성일: <span th:text="${post.createdAt}">작성일</span></p>
+    <p>❤️ 좋아요: <span th:text="${post.likeCount}">0</span>개</p>
+    <p>💬 댓글: <span th:text="${post.commentCount}">0</span>개</p>
+  </div>
+
+  <div class="app-banner">
+    <h3>🚀 더 많은 기능을 위해 앱을 설치하세요!</h3>
+    <p>댓글 작성, 좋아요, 팔로우 등 모든 기능을 이용해보세요</p>
+    <button onclick="openInApp()" class="open-app-btn">📱 앱에서 열기</button>
+    <a th:href="'https://play.google.com/store/apps/details?id=' + ${androidPackageName}" class="download-btn">🤖 Android 앱 다운로드</a>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  function openInApp() {
+      const postId = /*[[${post.id}]]*/ '123';
+      const packageName = /*[[${androidPackageName}]]*/ 'com.yourapp.package';
+
+      // 1. 커스텀 스킴으로 앱 실행 시도 (fallback)
+      const customScheme = `yourapp://post/${postId}`;
+
+      try {
+          // Android에서 Intent 스킴 시도
+          if (navigator.userAgent.includes('Android')) {
+              window.location.href = `intent://post/${postId}#Intent;scheme=yourapp;package=${packageName};end`;
+          } else {
+              // iOS에서 커스텀 스킴 시도
+              window.location.href = customScheme;
+          }
+
+          // 2초 후에도 페이지가 그대로면 앱이 없는 것으로 판단
+          setTimeout(function() {
+              if (navigator.userAgent.includes('Android')) {
+                  window.location.href = `https://play.google.com/store/apps/details?id=${packageName}`;
+              } else if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+                  window.location.href = 'https://apps.apple.com/app/your-app-id';
+              }
+          }, 2000);
+      } catch (e) {
+          console.log('앱 실행 실패:', e);
+      }
+  }
+</script>
+</body>
+</html>

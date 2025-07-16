@@ -1,0 +1,64 @@
+<!-- 📍 위치: src/main/resources/templates/error/share-not-found.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>링크를 찾을 수 없습니다</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 50px;
+        background-color: #f5f5f5;
+    }
+    .error-container {
+        max-width: 400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        padding: 40px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .error-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+    .error-title {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    .error-message {
+        color: #666;
+        margin-bottom: 30px;
+        line-height: 1.5;
+    }
+    .download-btn {
+        display: inline-block;
+        margin: 10px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+    .download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+  </style>
+</head>
+<body>
+<div class="error-container">
+  <div class="error-icon">😕</div>
+  <h2 class="error-title">링크를 찾을 수 없습니다</h2>
+  <p class="error-message">
+    공유 링크가 만료되었거나 잘못된 링크입니다.<br>
+    앱에서 최신 콘텐츠를 확인해보세요!
+  </p>
+  <a href="https://play.google.com/store/apps/details?id=com.yourapp.package" class="download-btn">📱 Android 앱 다운로드</a>
+</div>
+</body>
+</html>
