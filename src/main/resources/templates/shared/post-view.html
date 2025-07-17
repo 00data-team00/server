@@ -45,7 +45,7 @@
         margin-top: 30px;
         text-align: center;
     }
-    .download-btn, .open-app-btn {
+    .download-btn {
         display: inline-block;
         margin: 8px;
         padding: 12px 24px;
@@ -57,7 +57,7 @@
         transition: all 0.3s ease;
         cursor: pointer;
     }
-    .download-btn:hover, .open-app-btn:hover {
+    .download-btn:hover {
         background: rgba(255,255,255,0.3);
         transform: translateY(-2px);
     }
@@ -67,9 +67,6 @@
         margin-top: 15px;
         padding-top: 15px;
         border-top: 1px solid #eee;
-    }
-    .hidden-link {
-        display: none;
     }
   </style>
 </head>
@@ -90,115 +87,19 @@
     <h3>🚀 더 많은 기능을 위해 앱을 설치하세요!</h3>
     <p>댓글 작성, 좋아요, 팔로우 등 모든 기능을 이용해보세요</p>
 
-    <a href="#" onclick="return openInApp(event)" class="open-app-btn">📱 앱에서 열기</a>
-    <a th:href="'https://play.google.com/store/apps/details?id=' + ${androidPackageName}"
-       id="playStoreLink"
-       class="download-btn">🤖 Android 앱 다운로드</a>
+    <a href="#" onclick="return showComingSoonMessage(event)" class="download-btn">🤖 Android 앱 다운로드</a>
   </div>
 </div>
 
 <script th:inline="javascript">
-  function openInApp(event) {
+  function showComingSoonMessage(event) {
       // 기본 링크 동작 방지
       event.preventDefault();
 
-      const postId = /*[[${post.id}]]*/ null;
-      const packageName = /*[[${androidPackageName}]]*/ 'com.data.app';
-      const baseUrl = /*[[${baseUrl}]]*/ 'https://barum.p-e.kr';
-      const currentUrl = window.location.href;
-
-      console.log('openInApp 실행:', { postId, packageName, baseUrl, currentUrl });
-
-      // 필수 값 검증
-      if (!postId) {
-          console.error('게시물 ID가 없습니다');
-          alert('게시물 정보를 찾을 수 없습니다.');
-          return false;
-      }
-
-      // 현재 URL에서 토큰 추출 (URL이 /shared/post/TOKEN 형태)
-      const urlParts = currentUrl.split('/');
-      const token = urlParts[urlParts.length - 1];
-
-      // App Links URL - 현재 페이지의 URL을 그대로 사용
-      // 토큰 기반이므로 /shared/post/{token} 형태 유지
-      const appLinkUrl = currentUrl;
-
-      // 디바이스 타입 감지
-      const isAndroid = /Android/i.test(navigator.userAgent);
-      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-      if (isAndroid) {
-          // Android의 경우 App Links 사용
-          // href 속성을 동적으로 설정하고 클릭 이벤트 발생
-          console.log('Android App Links 실행:', appLinkUrl);
-
-          // 임시 링크 생성하여 클릭
-          const tempLink = document.createElement('a');
-          tempLink.href = appLinkUrl;
-          tempLink.style.display = 'none';
-          document.body.appendChild(tempLink);
-          tempLink.click();
-          document.body.removeChild(tempLink);
-
-          // 1.5초 후 페이지가 그대로 있으면 Play Store로 이동
-          setTimeout(function() {
-              // 페이지가 아직 visible 상태인지 확인
-              if (!document.hidden && document.visibilityState === 'visible') {
-                  console.log('앱이 열리지 않음, Play Store로 이동');
-                  window.location.href = `https://play.google.com/store/apps/details?id=${packageName}`;
-              }
-          }, 1500);
-      } else if (isIOS) {
-          // iOS의 경우 Universal Links 사용
-          console.log('iOS Universal Links 실행:', appLinkUrl);
-
-          // 임시 링크 생성하여 클릭
-          const tempLink = document.createElement('a');
-          tempLink.href = appLinkUrl;
-          tempLink.style.display = 'none';
-          document.body.appendChild(tempLink);
-          tempLink.click();
-          document.body.removeChild(tempLink);
-
-          // iOS도 유사하게 처리
-          setTimeout(function() {
-              if (!document.hidden && document.visibilityState === 'visible') {
-                  if (confirm('앱이 설치되지 않았습니다. App Store로 이동하시겠습니까?')) {
-                      // iOS App Store URL로 변경 필요
-                      window.location.href = 'https://apps.apple.com/app/your-app-id';
-                  }
-              }
-          }, 1500);
-      } else {
-          // 데스크톱의 경우 현재 페이지 유지
-          console.log('데스크톱에서는 현재 페이지 유지');
-          alert('모바일 앱에서 더 많은 기능을 이용하실 수 있습니다.');
-      }
+      alert('앱스토어 등록이 추후 예정되어 있습니다.');
 
       return false;
   }
-
-  // 페이지 가시성 변화 감지 (앱으로 전환되었는지 확인용)
-  let appOpened = false;
-
-  document.addEventListener('visibilitychange', function() {
-      if (document.hidden) {
-          appOpened = true;
-          console.log('페이지가 hidden 상태로 변경됨 - 앱이 열렸을 가능성');
-      }
-  });
-
-  // 페이지 포커스 이벤트로도 감지
-  window.addEventListener('blur', function() {
-      appOpened = true;
-      console.log('페이지가 포커스를 잃음 - 앱이 열렸을 가능성');
-  });
-
-  // beforeunload 이벤트로 페이지 이탈 감지
-  window.addEventListener('beforeunload', function() {
-      appOpened = true;
-  });
 </script>
 </body>
 </html>
