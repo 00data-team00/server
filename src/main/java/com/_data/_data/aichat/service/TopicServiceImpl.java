@@ -2,6 +2,7 @@ package com._data._data.aichat.service;
 
 import com._data._data.aichat.dto.TopicDto;
 import com._data._data.aichat.dto.TopicListDto;
+import com._data._data.aichat.dto.VisaListDto;
 import com._data._data.aichat.entity.Topic;
 import com._data._data.aichat.exception.TopicNotFoundException;
 import com._data._data.aichat.repository.TopicRepository;
@@ -67,6 +68,32 @@ public class TopicServiceImpl implements TopicService {
         }
 
         return topicListDto;
+
     }
 
+    @Override
+    public VisaListDto getVisaTopics() {
+
+        String[] categories = {"취업 비자", "구직 비자"};
+
+        VisaListDto visaListDto = new VisaListDto();
+
+        for (int i = 0; i < categories.length; i++) {
+
+            List<Topic> topics = topicRepository.findByCategory(categories[i]);
+
+            if (i == 0) {
+                visaListDto.setEmploymentVisa(topics.stream()
+                        .map(TopicServiceImpl::getTopicDto)
+                        .collect(Collectors.toList()));
+            }
+            else {
+                visaListDto.setJobSearchingVisa(topics.stream()
+                        .map(TopicServiceImpl::getTopicDto)
+                        .collect(Collectors.toList()));
+            }
+        }
+
+        return visaListDto;
+    }
 }

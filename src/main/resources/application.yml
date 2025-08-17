@@ -7,6 +7,7 @@ spring:
     name: 00data
   profiles:
     include: secret
+#    active: dev
 
   # Thymeleaf 설정 (HTML 템플릿용)
   thymeleaf:
@@ -27,8 +28,8 @@ spring:
 
   sql:
     init:
-      mode: always
-      data-locations: classpath:dummy-data/*.sql
+      mode: never
+#      data-locations: classpath:dummy-data/*.sql
 
   jpa:
     defer-datasource-initialization: true
