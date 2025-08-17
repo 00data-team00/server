@@ -36,6 +36,15 @@ public class AiChatController {
     }
 
     @Operation(
+            summary = "비자 면접 카테고리 목록",
+            description = "비자 면접 연습을 위한 비자 카테고리 목록을 반환합니다."
+    )
+    @GetMapping("/visa_topics")
+    public VisaListDto getVisaTopics() {
+        return topicService.getVisaTopics();
+    }
+
+    @Operation(
             summary = "채팅 시작",
             description = "유저가 선택한 주제로 채팅방을 생성하고 채팅방 ID와 함께 대화 시작 메세지를 반환합니다."
     )
