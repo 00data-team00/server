@@ -3,9 +3,12 @@ package com._data._data.community.repository;
 import com._data._data.community.entity.Like;
 import com._data._data.community.entity.Post;
 import com._data._data.user.entity.Users;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,4 +22,9 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     @Modifying
     @Transactional
     void deleteByUser(Users user);
+
+    // 여러 포스트에 대한 한 유저의 좋아요 조회
+    @Query("SELECT l FROM Like l WHERE l.post.id IN :postIds AND l.user = :user")
+    List<Like> findByPostIdInAndUser(@Param("postIds") List<Long> postIds, @Param("user") Users user);
+
 }
