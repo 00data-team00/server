@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,5 +27,10 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     @Modifying
     @Transactional
     void deleteByFollowee(Users followee);
+
+    // 특정 팔로워가 여러 유저들을 팔로우하는지 한 번에 조회
+    @Query("SELECT f FROM Follow f WHERE f.follower = :follower AND f.followee.id IN :followeeIds")
+    List<Follow> findByFollowerAndFolloweeIdIn(@Param("follower") Users follower, @Param("followeeIds") List<Long> followeeIds);
+
 
 }
