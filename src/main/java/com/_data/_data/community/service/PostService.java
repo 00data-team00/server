@@ -12,6 +12,9 @@ import com._data._data.community.repository.FollowRepository;
 import com._data._data.user.entity.Nation;
 import com._data._data.user.service.NationService;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.util.List;
@@ -79,17 +82,6 @@ public class PostService {
         postRepository.delete(post);
     }
 
-    public List<PostDto> getAllPosts(Users currentUser) {
-        return postRepository.findAllByOrderByCreatedAtDesc()
-            .stream()
-            .map(post -> {
-                boolean isLiked = currentUser != null &&
-                    likeRepository.existsByPostAndUser(post, currentUser);
-                return PostDto.fromWithLiked(post, isLiked);
-            })
-            .toList();
-    }
-
     /**
      * Firebase Storage URL에서 파일 경로 추출
      * 예: https://storage.googleapis.com/bucket/post/filename.jpg -> post/filename.jpg
@@ -113,13 +105,15 @@ public class PostService {
         return null;
     }
 
+    @Transactional(readOnly = true)
     public List<PostDto> getPostsByUser(Users user, Users currentUser) {
-        return postRepository.findByAuthorOrderByCreatedAtDesc(user).stream()
-            .map(post -> {
-                boolean isLiked = currentUser != null &&
-                    likeRepository.existsByPostAndUser(post, currentUser);
-                return PostDto.fromWithLiked(post, isLiked);
-            })
+        List<Post> posts = postRepository.findByAuthorWithAuthorAndNation(user);
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, Boolean> likeStatusMap = getLikeStatusMap(posts, currentUser);
+        return posts.stream()
+            .map(post -> PostDto.fromWithLiked(post, likeStatusMap.get(post.getId())))
             .toList();
     }
 
@@ -141,6 +135,29 @@ public class PostService {
         return CommentDto.from(comment);
     }
 
+    // like 배치 조회
+    private Map<Long, Boolean> getLikeStatusMap(List<Post> posts, Users currentUser) {
+        if (currentUser == null) {
+            return posts.stream()
+                .collect(Collectors.toMap(Post::getId, post -> false));
+        }
+
+        List<Long> postIds = posts.stream()
+            .map(Post::getId)
+            .toList();
+
+        List<Like> likes = likeRepository.findByPostIdInAndUser(postIds, currentUser);
+        Set<Long> likedPostIds = likes.stream()
+            .map(like -> like.getPost().getId())
+            .collect(Collectors.toSet());
+
+        return posts.stream()
+            .collect(Collectors.toMap(
+                Post::getId,
+                post -> likedPostIds.contains(post.getId())
+            ));
+    }
+    
     public void likePost(Users user, Long postId) {
         Post post = postRepository.findById(postId)
             .orElseThrow(() -> new EntityNotFoundException("포스트 없음"));
@@ -170,35 +187,7 @@ public class PostService {
         postRepository.save(post);
     }
 
-    @Transactional(readOnly = true)
-    public List<PostDto> getFollowingTimeline(Users user) {
-        List<Users> followees = followRepository.findByFollower(user).stream()
-            .map(Follow::getFollowee)
-            .toList();
-        if (followees.isEmpty()) {
-            return List.of();
-        }
-        return postRepository.findByAuthorInOrderByCreatedAtDesc(followees)
-            .stream()
-            .map(post -> {
-                boolean isLiked = likeRepository.existsByPostAndUser(post, user);
-                return PostDto.fromWithLiked(post, isLiked);
-            })
-            .toList();
-    }
-
-    public List<PostDto> getNationTimeline(Users user) {
-        return postRepository.findByAuthor_NationsOrderByCreatedAtDesc(user.getNations())
-            .stream()
-            .map(post -> {
-                boolean isLiked = likeRepository.existsByPostAndUser(post, user);
-                return PostDto.fromWithLiked(post, isLiked);
-            })
-            .toList();
-    }
-
-
-    // 🔹 유저 ID를 통해 프로필 조회 (다른 유저의 프로필을 조회할 때 사용)
+    // 유저 ID를 통해 프로필 조회 (다른 유저의 프로필을 조회할 때 사용)
     public ProfileDto getProfile(Users currentUser, Long targetUserId) {
         Users targetUser = userRepository.findById(targetUserId)
             .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다"));
@@ -206,7 +195,6 @@ public class PostService {
     }
 
     public ProfileDto getProfile(Users currentUser, Users targetUser) {
-        // 🔥 null 체크 추가
         boolean isFollowing = currentUser != null
             && !currentUser.equals(targetUser)
             && followRepository.existsByFollowerAndFollowee(currentUser, targetUser);
@@ -224,73 +212,109 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostWithAuthorProfileDto> getFollowingTimelineDetailed(Users currentUser) {
         List<Users> followees = followRepository.findByFollower(currentUser)
-            .stream().map(f -> f.getFollowee()).toList();
+            .stream().map(Follow::getFollowee).toList();
 
         if (followees.isEmpty()) {
             return List.of();
         }
-        // Fetch posts by followees
-        List<Post> posts = postRepository.findByAuthorInOrderByCreatedAtDesc(followees);
 
+        List<Post> posts = postRepository.findByAuthorInWithAuthorAndNation(followees);
+
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Boolean> likeStatusMap = getLikeStatusMap(posts, currentUser);
 
         return posts.stream().map(post -> {
-            boolean isFollowing = true; // by definition, author is followed
-            boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+            boolean isLiked = likeStatusMap.get(post.getId());
+            PostDto postDto = PostDto.fromWithLiked(post, isLiked);
 
-            // 🔥 수정: PostDto에도 isLiked 적용
-            PostDto dto = PostDto.fromWithLiked(post, isLiked);
-
-            // 🔥 국가 정보 추가
-            Nation nation = nationService.getNationById(post.getAuthor().getNations());
+            Users author = post.getAuthor();
+            Nation nation = nationService.getNationById(author.getNations());
             String nationName = nation != null ? nation.getName() : "Unknown";
             String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
 
-            var authorProfile = new PostAuthorProfileDto(
-                post.getAuthor().getId(),
-                post.getAuthor().getName(),
-                post.getAuthor().getProfileImage(),
-                (long) post.getAuthor().getPosts().size(),
-                (long) post.getAuthor().getFollowers().size(),
-                (long) post.getAuthor().getFollowing().size(),
-                isFollowing,
-                nationName,    // 🔥 추가
-                nationNameKo   // 🔥 추가
+            PostAuthorProfileDto authorProfile = new PostAuthorProfileDto(
+                author.getId(),
+                author.getName(),
+                author.getProfileImage(),
+                (long) author.getPosts().size(),
+                (long) author.getFollowers().size(),
+                (long) author.getFollowing().size(),
+                true, // 팔로잉 타임라인이므로 항상 true
+                nationName,
+                nationNameKo
             );
-            return new PostWithAuthorProfileDto(dto, authorProfile);
+            return new PostWithAuthorProfileDto(postDto, authorProfile);
         }).toList();
     }
+
 
     /**
      * 국가별 타임라인: Post + author profile + isLiked
      */
     @Transactional(readOnly = true)
     public List<PostWithAuthorProfileDto> getNationTimelineDetailed(Users currentUser) {
-        List<Post> posts = postRepository.findByAuthor_NationsOrderByCreatedAtDesc(currentUser.getNations());
+        List<Post> posts = postRepository.findByAuthorNationsWithAuthorAndNation(currentUser.getNations());
+
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Boolean> likeStatusMap = getLikeStatusMap(posts, currentUser);
+        List<Users> authors = posts.stream()
+            .map(Post::getAuthor)
+            .distinct()
+            .toList();
+        Map<Long, Boolean> followStatusMap = getFollowStatusMap(authors, currentUser);
 
         return posts.stream().map(post -> {
-            boolean isFollowing = followRepository.existsByFollowerAndFollowee(currentUser, post.getAuthor());
-            boolean isLiked = likeRepository.existsByPostAndUser(post, currentUser);
+            boolean isLiked = likeStatusMap.get(post.getId());
+            boolean isFollowing = followStatusMap.get(post.getAuthor().getId());
+            PostDto postDto = PostDto.fromWithLiked(post, isLiked);
 
-            PostDto dto = PostDto.fromWithLiked(post, isLiked);
-
-            // 🔥 국가 정보 추가
-            Nation nation = nationService.getNationById(post.getAuthor().getNations());
+            Users author = post.getAuthor();
+            Nation nation = nationService.getNationById(author.getNations());
             String nationName = nation != null ? nation.getName() : "Unknown";
             String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
 
-            var authorProfile = new PostAuthorProfileDto(
-                post.getAuthor().getId(),
-                post.getAuthor().getName(),
-                post.getAuthor().getProfileImage(),
-                (long) post.getAuthor().getPosts().size(),
-                (long) post.getAuthor().getFollowers().size(),
-                (long) post.getAuthor().getFollowing().size(),
+            PostAuthorProfileDto authorProfile = new PostAuthorProfileDto(
+                author.getId(),
+                author.getName(),
+                author.getProfileImage(),
+                (long) author.getPosts().size(),
+                (long) author.getFollowers().size(),
+                (long) author.getFollowing().size(),
                 isFollowing,
-                nationName,    // 🔥 추가
-                nationNameKo   // 🔥 추가
+                nationName,
+                nationNameKo
             );
-            return new PostWithAuthorProfileDto(dto, authorProfile);
+            return new PostWithAuthorProfileDto(postDto, authorProfile);
         }).toList();
+    }
+
+    // follow 배치조회
+    private Map<Long, Boolean> getFollowStatusMap(List<Users> authors, Users currentUser) {
+        if (currentUser == null) {
+            return authors.stream()
+                .collect(Collectors.toMap(Users::getId, user -> false));
+        }
+
+        List<Long> authorIds = authors.stream()
+            .map(Users::getId)
+            .toList();
+
+        List<Follow> follows = followRepository.findByFollowerAndFolloweeIdIn(currentUser, authorIds);
+        Set<Long> followedAuthorIds = follows.stream()
+            .map(follow -> follow.getFollowee().getId())
+            .collect(Collectors.toSet());
+
+        return authors.stream()
+            .collect(Collectors.toMap(
+                Users::getId,
+                user -> followedAuthorIds.contains(user.getId())
+            ));
     }
 
     /**
@@ -298,80 +322,99 @@ public class PostService {
      */
     @Transactional(readOnly = true)
     public List<PostWithAuthorProfileDto> getAllTimelineDetailed(Users currentUser) {
-        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+        List<Post> posts = postRepository.findAllWithAuthorAndNation();
+
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Boolean> likeStatusMap = getLikeStatusMap(posts, currentUser);
+        List<Users> authors = posts.stream()
+            .map(Post::getAuthor)
+            .distinct()
+            .toList();
+        Map<Long, Boolean> followStatusMap = getFollowStatusMap(authors, currentUser);
 
         return posts.stream().map(post -> {
-            boolean isFollowing = currentUser != null &&
-                followRepository.existsByFollowerAndFollowee(currentUser, post.getAuthor());
-            boolean isLiked = currentUser != null &&
-                likeRepository.existsByPostAndUser(post, currentUser);
+            boolean isLiked = likeStatusMap.get(post.getId());
+            boolean isFollowing = followStatusMap.get(post.getAuthor().getId());
+            PostDto postDto = PostDto.fromWithLiked(post, isLiked);
 
-            // 🔥 수정: PostDto에도 isLiked 적용
-            PostDto dto = PostDto.fromWithLiked(post, isLiked);
-
-            Nation nation = nationService.getNationById(post.getAuthor().getNations());
+            Users author = post.getAuthor();
+            Nation nation = nationService.getNationById(author.getNations());
             String nationName = nation != null ? nation.getName() : "Unknown";
             String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
 
-            var authorProfile = new PostAuthorProfileDto(
-                post.getAuthor().getId(),
-                post.getAuthor().getName(),
-                post.getAuthor().getProfileImage(),
-                (long) post.getAuthor().getPosts().size(),
-                (long) post.getAuthor().getFollowers().size(),
-                (long) post.getAuthor().getFollowing().size(),
+            PostAuthorProfileDto authorProfile = new PostAuthorProfileDto(
+                author.getId(),
+                author.getName(),
+                author.getProfileImage(),
+                (long) author.getPosts().size(),
+                (long) author.getFollowers().size(),
+                (long) author.getFollowing().size(),
                 isFollowing,
                 nationName,
                 nationNameKo
             );
-            return new PostWithAuthorProfileDto(dto, authorProfile);
+            return new PostWithAuthorProfileDto(postDto, authorProfile);
         }).toList();
     }
 
-
     /**
-     * 🔥 새로 추가: 포스트 상세 조회 (댓글 포함)
+     * 포스트 상세 조회 (댓글 포함)
      */
     @Transactional(readOnly = true)
     public PostDetailDto getPostDetail(Long postId, Users currentUser) {
-        Post post = postRepository.findById(postId)
+        // 1. Post + Author를 한 번에 조회
+        Post post = postRepository.findByIdWithAuthor(postId)
             .orElseThrow(() -> new EntityNotFoundException("포스트를 찾을 수 없습니다."));
 
-        // 댓글을 오래된 순으로 조회 (일반적인 댓글 순서)
-        List<Comment> comments = commentRepository.findByPostOrderByCreatedAtAsc(post);
+        // 2. 댓글들을 한 번에 조회 (댓글 작성자 정보 포함)
+        List<Comment> comments = commentRepository.findByPostWithCommenterOrderByCreatedAtAsc(post);
         List<CommentDto> commentDtos = comments.stream()
             .map(CommentDto::from)
             .toList();
 
-        // 현재 유저가 이 포스트에 좋아요를 눌렀는지 확인
+        // 3. Like 상태 확인 (단건이므로 기존 방식 유지)
         boolean isLiked = currentUser != null &&
             likeRepository.existsByPostAndUser(post, currentUser);
 
-        return PostDetailDto.fromWithComments(post, commentDtos, isLiked);    }
+        return PostDetailDto.fromWithComments(post, commentDtos, isLiked);
+    }
+
     /**
-     * 🔥 특정 유저의 포스트를 최신순으로 조회 (상세 정보 포함)
+     * 특정 유저의 포스트를 최신순으로 조회 (상세 정보 포함)
      */
     @Transactional(readOnly = true)
     public List<PostWithAuthorProfileDto> getUserPostsDetailed(Users currentUser, Long targetUserId) {
+        // 1. 대상 유저 조회
         Users targetUser = userRepository.findById(targetUserId)
             .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다"));
 
-        // 해당 유저의 포스트를 최신순으로 조회
-        List<Post> posts = postRepository.findByAuthorOrderByCreatedAtDesc(targetUser);
+        // 2. 해당 유저의 Post + Author + Nation을 한 번에 조회
+        List<Post> posts = postRepository.findByAuthorWithAuthorAndNation(targetUser);
 
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+
+        // 3. Like 정보를 배치로 조회
+        Map<Long, Boolean> likeStatusMap = getLikeStatusMap(posts, currentUser);
+
+        // 4. Follow 상태 확인 (단일 유저이므로 한 번만 조회)
+        boolean isFollowing = currentUser != null &&
+            followRepository.existsByFollowerAndFollowee(currentUser, targetUser);
+
+        // 5. DTO 변환
         return posts.stream().map(post -> {
-            boolean isFollowing = currentUser != null &&
-                followRepository.existsByFollowerAndFollowee(currentUser, targetUser);
-            boolean isLiked = currentUser != null &&
-                likeRepository.existsByPostAndUser(post, currentUser);
-            PostDto dto = PostDto.fromWithLiked(post, isLiked);
+            boolean isLiked = likeStatusMap.get(post.getId());
+            PostDto postDto = PostDto.fromWithLiked(post, isLiked);
 
-            // 🔥 국가 정보 추가
             Nation nation = nationService.getNationById(targetUser.getNations());
             String nationName = nation != null ? nation.getName() : "Unknown";
             String nationNameKo = nation != null ? nation.getNameKo() : "알 수 없음";
 
-            var authorProfile = new PostAuthorProfileDto(
+            PostAuthorProfileDto authorProfile = new PostAuthorProfileDto(
                 targetUser.getId(),
                 targetUser.getName(),
                 targetUser.getProfileImage(),
@@ -382,7 +425,7 @@ public class PostService {
                 nationName,
                 nationNameKo
             );
-            return new PostWithAuthorProfileDto(dto, authorProfile);
+            return new PostWithAuthorProfileDto(postDto, authorProfile);
         }).toList();
     }
 }
