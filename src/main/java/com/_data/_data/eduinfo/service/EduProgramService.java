@@ -1,335 +1,197 @@
 package com._data._data.eduinfo.service;
 
-import com._data._data.aichat.service.TranslationService;
-import com._data._data.auth.entity.CustomUserDetails;
+import com._data._data.common.util.language.UserLanguageResolver;
 import com._data._data.eduinfo.dto.EduProgramSimpleDto;
 import com._data._data.eduinfo.entity.EduProgram;
+import com._data._data.eduinfo.mapper.EduProgramDtoMapper;
+import com._data._data.eduinfo.parser.EduProgramDataParser;
 import com._data._data.eduinfo.repository.EduProgramRepository;
-import com._data._data.user.entity.Users;
-import com._data._data.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+
 @Slf4j
 @Service
-@RequiredArgsConstructor
+@Transactional
 public class EduProgramService {
+
     private final EduProgramRepository eduProgramRepository;
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-    private final TranslationService translationService;
-    private final UserRepository userRepository;
+    private final UserLanguageResolver userLanguageResolver;
+    private final EduProgramDtoMapper dtoMapper;
+    private final EduProgramApiService apiService;
+    private final EduProgramDataParser dataParser;
+    private final EduProgramTranslationService translationService;
 
-    @Value("${spring.edu-program.api-key}")
-    private String eduProgramApiKey;
-
-    @Value("${app.upload.base-url}")
-    private String baseUrl;
-
-//    private static final String DEFAULT_THUMBNAIL = "이미지가 없습니다.";
+    public EduProgramService(EduProgramRepository eduProgramRepository,
+        UserLanguageResolver userLanguageResolver,
+        EduProgramDtoMapper dtoMapper,
+        EduProgramApiService apiService,
+        EduProgramDataParser dataParser,
+        EduProgramTranslationService translationService) {
+        this.eduProgramRepository = eduProgramRepository;
+        this.userLanguageResolver = userLanguageResolver;
+        this.dtoMapper = dtoMapper;
+        this.apiService = apiService;
+        this.dataParser = dataParser;
+        this.translationService = translationService;
+    }
 
     /**
-     * 썸네일 URL을 반환하는 메소드 (null인 경우 기본 이미지 반환)
+     * 외부 API에서 교육 프로그램 데이터를 가져와서 저장
+     * 비동기로 실행되며 기존 데이터와 비교하여 번역 누락분을 채움
      */
-    private String getThumbnailUrl(String thumbnailUrl) {
-        return (thumbnailUrl != null && !thumbnailUrl.isBlank())
-            ? thumbnailUrl
-            : null;
-    }
-
-    private String getCurrentUserLang() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()
-            || !(auth.getPrincipal() instanceof CustomUserDetails)) {
-            log.debug("getCurrentUserLang: 익명(비로그인) 상태, 기본 언어 'ko' 사용");
-            return "ko";
-        }
-        CustomUserDetails ud = (CustomUserDetails) auth.getPrincipal();
-        String email = ud.getUsername();
-        Users user = userRepository.findByEmailAndIsDeletedFalse(ud.getUsername());
-        String lang = user.getTranslationLang();
-        log.debug("getCurrentUserLang: 로그인 사용자={} 의 언어 설정={}", email, lang);
-        return lang;
-    }
-
-
-    /**
-     *  공공데이터 api에서 프로그램 정보를 가져옴
-     *
-     * **/
     @Async
     public void fetchAndSavePrograms() {
         try {
-            String url = String.format(
-                "http://openapi.seoul.go.kr:8088/%s/json/TEducProg/1/1000/",
-                eduProgramApiKey
-            );
-            JsonNode items = objectMapper
-                .readTree(restTemplate.getForEntity(url, String.class).getBody())
-                .path("TEducProg").path("row");
+            log.info("교육 프로그램 데이터 동기화 시작");
 
-            for (JsonNode item : items) {
-                if (!"KO".equals(item.path("LANG_GB").asText())) continue;
+            JsonNode programItems = apiService.fetchProgramsFromApi();
+            int processedCount = 0;
+            int totalCount = programItems.size();
 
-                // 1) JSON → 엔티티 변환 (KO 원본만)
-                EduProgram incoming = convertToEntity(item);
-
-                // 2) titleNm 으로만 기존 레코드 확인
-                Optional<EduProgram> opt = eduProgramRepository
-                    .findByTitleNm(incoming.getTitleNm());
-
-                if (opt.isPresent()) {
-                    EduProgram existing = opt.get();
-
-                    // 3) 기존에 번역이 빠진 필드가 있으면 채워넣고 저장
-                    boolean dirty = false;
-                    String ko = existing.getTitleNm();  // 둘 다 KO 원본은 동일
-
-                    if (existing.getTitleEn() == null || existing.getTitleEn().isBlank()) {
-                        existing.setTitleEn( translationService.translateText(ko, "ko", "en-US") );
-                        dirty = true;
-                    }
-                    if (existing.getTitleZh() == null || existing.getTitleZh().isBlank()) {
-                        existing.setTitleZh( translationService.translateText(ko, "ko", "zh") );
-                        dirty = true;
-                    }
-                    if (existing.getTitleJa() == null || existing.getTitleJa().isBlank()) {
-                        existing.setTitleJa( translationService.translateText(ko, "ko", "ja") );
-                        dirty = true;
-                    }
-                    if (existing.getTitleVi() == null || existing.getTitleVi().isBlank()) {
-                        existing.setTitleVi( translationService.translateText(ko, "ko", "vi") );
-                        dirty = true;
-                    }
-                    if (existing.getTitleId() == null || existing.getTitleId().isBlank()) {
-                        existing.setTitleId( translationService.translateText(ko, "ko", "id") );
-                        dirty = true;
-                    }
-
-                    if (dirty) {
-                        eduProgramRepository.save(existing);
-                    }
-
-                } else {
-                    // 4) 신규 저장 시에는 KO 원본 + 번역 전부 세팅
-                    String ko = incoming.getTitleNm();
-                    incoming.setTitleEn( translationService.translateText(ko, "ko", "en-US") );
-                    incoming.setTitleZh( translationService.translateText(ko, "ko", "zh") );
-                    incoming.setTitleJa( translationService.translateText(ko, "ko", "ja") );
-                    incoming.setTitleVi( translationService.translateText(ko, "ko", "vi") );
-                    incoming.setTitleId( translationService.translateText(ko, "ko", "id") );
-
-                    eduProgramRepository.save(incoming);
+            for (JsonNode item : programItems) {
+                if (!isKoreanProgram(item)) {
+                    continue;
                 }
+
+                processProgram(item);
+                processedCount++;
             }
+
+            log.info("교육 프로그램 데이터 동기화 완료: {}/{} 처리됨", processedCount, totalCount);
+
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("교육 프로그램 데이터 동기화 중 오류 발생", e);
+            throw new RuntimeException("교육 프로그램 데이터 동기화에 실패했습니다.", e);
         }
     }
 
-
     /**
-     *  곧 마감되는 프로그램
-     *
-     * **/
+     * 곧 마감되는 프로그램 조회 (7일 이내)
+     */
     @Transactional(readOnly = true)
     public List<EduProgramSimpleDto> findClosingSoonPrograms() {
-        String lang = getCurrentUserLang();
-        return eduProgramRepository
-            .findByAppEndYnFalseAndAppEndDateBetweenOrderByAppEndDateAsc(LocalDate.now(), LocalDate.now().plusDays(7))
-            .stream()
-            .map(ep -> toSimpleDto(ep, lang))
+        String userLanguage = userLanguageResolver.getCurrentUserLanguage();
+        LocalDate today = LocalDate.now();
+        LocalDate weekLater = today.plusDays(7);
+
+        log.debug("마감 임박 프로그램 조회: {} ~ {}, 언어: {}", today, weekLater, userLanguage);
+
+        List<EduProgram> programs = eduProgramRepository
+            .findByAppEndYnFalseAndAppEndDateBetweenOrderByAppEndDateAsc(today, weekLater);
+
+        return programs.stream()
+            .map(program -> dtoMapper.toSimpleDto(program, userLanguage))
             .toList();
     }
+
     /**
-     *  모든 정보
-     *
-     * **/
+     * 전체 교육 프로그램 조회 (페이징, 필터링, 정렬 지원)
+     */
     @Transactional(readOnly = true)
-    public Page<EduProgramSimpleDto> findAllPrograms(
-        Boolean isFree,
-        String sort,
-        int page,
-        int size
-    ) {
-        // 1) 로그인된 사용자의 설정 언어 가져오기
-        String lang = getCurrentUserLang();
+    public Page<EduProgramSimpleDto> findAllPrograms(Boolean isFree, String sortBy,
+        int page, int size) {
+        String userLanguage = userLanguageResolver.getCurrentUserLanguage();
+        PageRequest pageRequest = createPageRequest(page, size, sortBy);
 
-        // 2) 페이징·정렬
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sort));
-        Page<EduProgram> result;
+        log.debug("교육 프로그램 목록 조회: 무료={}, 정렬={}, 페이지={}, 크기={}, 언어={}",
+            isFree, sortBy, page, size, userLanguage);
 
-        // 3) 무료/유료 필터
-        if (isFree != null) {
-            result = isFree
-                ? eduProgramRepository.findByTuitEtcIsNullOrTuitEtc("", pageRequest)
-                : eduProgramRepository.findByTuitEtcIsNotNullAndTuitEtcNot("", pageRequest);
-        } else {
-            result = eduProgramRepository.findAll(pageRequest);
-        }
+        Page<EduProgram> programPage = findProgramsByFeeFilter(isFree, pageRequest);
 
-        // 4) 각 엔티티를 DTO로 변환하며 번역된 제목 선택
-        return result.map(ep -> {
-            String title;
-            switch (lang) {
-                case "en":
-                case "en-US":
-                case "en-GB": title = ep.getTitleEn(); break;
-                case "zh":    title = ep.getTitleZh(); break;
-                case "ja":    title = ep.getTitleJa(); break;
-                case "vi":    title = ep.getTitleVi(); break;
-                case "id":    title = ep.getTitleId(); break;
-                default:      title = ep.getTitleNm();
-            }
-            // appLink 값 결정
-            String link = ep.getAppLink() != null && !ep.getAppLink().isBlank()
-                ? ep.getAppLink()
-                : "검색 결과가 없습니다.";
-
-            String thumbnailUrl = getThumbnailUrl(ep.getThumbnailUrl());
-
-            return new EduProgramSimpleDto(
-                ep.getId(),
-                title,
-                ep.getAppQual(),
-                ep.getTuitEtc(),
-                ep.getAppEndDate(),
-                (ep.getTuitEtc() == null || ep.getTuitEtc().isBlank()),
-                link,
-                thumbnailUrl
-            );
-        });
+        return programPage.map(program -> dtoMapper.toSimpleDto(program, userLanguage));
     }
 
-
+    /**
+     * 교육 프로그램 상세 조회
+     */
+    @Transactional(readOnly = true)
     public EduProgram findDetailById(Long id) {
         return eduProgramRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("해당 교육을 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(
+                String.format("ID %d에 해당하는 교육 프로그램을 찾을 수 없습니다.", id)
+            ));
     }
 
-    private EduProgram convertToEntity(JsonNode item) {
-        return EduProgram.builder()
-            .titleNm(item.path("TITL_NM").asText())
-            .langGb(item.path("LANG_GB").asText())
-            .cont(item.path("CONT").asText())
-            .appStartDate(parseDate(item, "APP_ST_DT"))
-            .appStartTime(parseTime(item, "APP_ST_HOUR_DT", "APP_ST_MINU_DT"))
-            .appEndDate(parseDate(item, "APP_EN_DT"))
-            .appEndTime(parseTime(item, "APP_EN_HOUR_DT", "APP_EN_MINU_DT"))
-            .appEndYn("Y".equals(item.path("APP_END_YN").asText()))
-            .eduStartDate(parseDate(item, "EDU_ST_DT"))
-            .eduStartTime(parseTime(item, "EDU_ST_HOUR_DT", "EDU_ST_MINU_DT"))
-            .eduEndDate(parseDate(item, "EDU_EN_DT"))
-            .eduEndTime(parseTime(item, "EDU_EN_HOUR_DT", "EDU_EN_MINU_DT"))
-            .appQual(item.path("APP_QUAL").asText())
-            .appWayEtc(item.path("APP_WAY_ETC").asText())
-            .tuitEtc(item.path("TUIT_ETC").asText())
-            .pers(item.path("PERS").asInt())
-            .regDt(parseDateTime(item, "REG_DT"))
-            .updDt(parseDateTime(item, "UPD_DT"))
-            .thumbnailUrl(null)
-            .build();
+    // ===== Private Helper Methods =====
+
+    /**
+     * 한국어 프로그램인지 확인
+     */
+    private boolean isKoreanProgram(JsonNode item) {
+        return "KO".equals(item.path("LANG_GB").asText());
     }
 
-    private EduProgramSimpleDto toSimpleDto(EduProgram ep, String lang) {
-        String title;
-        switch (lang) {
-            case "en-US", "en-GB": title = ep.getTitleEn(); break;
-            case "zh":             title = ep.getTitleZh(); break;
-            case "ja":             title = ep.getTitleJa(); break;
-            case "vi":             title = ep.getTitleVi(); break;
-            case "id":             title = ep.getTitleId(); break;
-            default:               title = ep.getTitleNm();
-        }
-
-        String link = ep.getAppLink() != null && !ep.getAppLink().isBlank()
-            ? ep.getAppLink()
-            : "검색 결과가 없습니다.";
-
-        String thumbnailUrl = getThumbnailUrl(ep.getThumbnailUrl());
-
-        return new EduProgramSimpleDto(
-            ep.getId(),
-            title,
-            ep.getAppQual(),
-            ep.getTuitEtc(),
-            ep.getAppEndDate(),
-            (ep.getTuitEtc() == null || ep.getTuitEtc().isBlank()),
-            link,
-            thumbnailUrl
-        );
-    }
-
-
-    private LocalDate parseDate(JsonNode item, String key) {
-        String raw = item.path(key).asText();
-
-        // 하이픈이 있는 경우: "2025-04-22"
-        if (raw.contains("-")) {
-            return LocalDate.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE);
-        }
-
-        // 하이픈 없는 경우: "20250422"
-        if (raw.length() >= 8) {
-            return LocalDate.parse(raw, DateTimeFormatter.ofPattern("yyyyMMdd"));
-        }
-
-        return null;
-    }
-
-    private LocalTime parseTime(JsonNode item, String hourKey, String minKey) {
+    /**
+     * 개별 프로그램 처리 (신규 저장 또는 기존 업데이트)
+     */
+    private void processProgram(JsonNode item) {
         try {
-            int hour = Integer.parseInt(item.path(hourKey).asText());
-            int minute = Integer.parseInt(item.path(minKey).asText());
-            return LocalTime.of(hour, minute);
-        } catch (Exception e) {
-            return null;
-        }
-    }
+            EduProgram parsedProgram = dataParser.parseFromJson(item);
 
-    private LocalDateTime parseDateTime(JsonNode item, String key) {
-        String raw = item.path(key).asText();
+            Optional<EduProgram> existingProgram = eduProgramRepository
+                .findByTitleNm(parsedProgram.getTitleNm());
 
-        try {
-            // 예: 20250422144321 → yyyyMMddHHmmss
-            if (raw.length() == 14) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-                return LocalDateTime.parse(raw, formatter);
-            }
-
-            // 예: 2025-04-22T14:43:21 → ISO_LOCAL_DATE_TIME
-            if (raw.contains("T")) {
-                return LocalDateTime.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            }
-
-            // 예: 20250422 → 그냥 날짜만 있는 경우
-            if (raw.length() == 8) {
-                LocalDate date = LocalDate.parse(raw, DateTimeFormatter.ofPattern("yyyyMMdd"));
-                return date.atStartOfDay();
+            if (existingProgram.isPresent()) {
+                updateExistingProgram(existingProgram.get());
+            } else {
+                saveNewProgram(parsedProgram);
             }
 
         } catch (Exception e) {
-            System.err.println("⚠️ 날짜 파싱 실패: " + raw);
+            log.warn("프로그램 처리 중 오류 발생: {}",
+                item.path("TITL_NM").asText(), e);
         }
-
-        return null;
     }
 
+    /**
+     * 기존 프로그램의 누락된 번역 채우기
+     */
+    private void updateExistingProgram(EduProgram existingProgram) {
+        boolean hasUpdates = translationService.fillMissingTranslations(existingProgram);
+
+        if (hasUpdates) {
+            eduProgramRepository.save(existingProgram);
+            log.debug("기존 프로그램 번역 업데이트: {}", existingProgram.getTitleNm());
+        }
+    }
+
+    /**
+     * 신규 프로그램 저장 (모든 번역 포함)
+     */
+    private void saveNewProgram(EduProgram newProgram) {
+        EduProgram programWithTranslations = translationService
+            .createWithAllTranslations(newProgram);
+
+        eduProgramRepository.save(programWithTranslations);
+        log.debug("신규 프로그램 저장: {}", newProgram.getTitleNm());
+    }
+
+    /**
+     * 페이지 요청 객체 생성
+     */
+    private PageRequest createPageRequest(int page, int size, String sortBy) {
+        return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortBy));
+    }
+
+    /**
+     * 수강료 필터에 따른 프로그램 조회
+     */
+    private Page<EduProgram> findProgramsByFeeFilter(Boolean isFree, PageRequest pageRequest) {
+        if (isFree == null) {
+            return eduProgramRepository.findAll(pageRequest);
+        }
+
+        return isFree
+            ? eduProgramRepository.findByTuitEtcIsNullOrTuitEtc("", pageRequest)
+            : eduProgramRepository.findByTuitEtcIsNotNullAndTuitEtcNot("", pageRequest);
+    }
 }
